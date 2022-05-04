@@ -6,7 +6,6 @@ import { Book3D } from './Model/Book3D';
 import { DirectionalLight, Mesh, Object3D } from 'three';
 import { ResultPage } from './ResultPage';
 import { TWEEN } from 'three/examples/jsm/libs/tween.module.min';
-import { AddPage } from './AddPage';
 import { Book } from './Model/Book';
 import { generateUUID } from 'three/src/math/MathUtils';
 
@@ -16,7 +15,7 @@ let renderer = envManager.renderer;
 let camera = envManager.camera;
 document.body.appendChild(renderer.domElement);
 const controls = new OrbitControls(camera, renderer.domElement);
-controls.maxDistance = 500;
+// controls.maxDistance = 500;
 //Program;
 
 const light = new DirectionalLight(0xffffff);
@@ -34,10 +33,11 @@ const tableShape: Object3D[] = [];
 
 function refreshHelixShape() {
   const total = dataLoader.filteredList.length;
+  const totalF = dataLoader.bookList.length;
   helixShape.length = 0;
   for (let i = 0, l = total; i < l; i++) {
     const theta = i * 0.1 + Math.PI / 2;
-    const y = -i + 400;
+    const y = -i + (400 * total) / totalF;
 
     const object = new THREE.Object3D();
 
@@ -54,13 +54,14 @@ function refreshHelixShape() {
 }
 function refreshSphereShape() {
   const total = dataLoader.filteredList.length;
+  const totalF = dataLoader.bookList.length;
   sphereShape.length = 0;
   for (let i = 0, l = total; i < l; i++) {
     const phi = Math.acos(-1 + (2 * i) / l);
     const theta = Math.sqrt(l * Math.PI) * phi;
 
     const object = new THREE.Object3D();
-    object.position.setFromSphericalCoords(140, phi, theta);
+    object.position.setFromSphericalCoords(190, phi, theta);
     vector.copy(object.position).multiplyScalar(2);
     object.lookAt(vector);
     sphereShape.push(object);
@@ -70,11 +71,13 @@ function refreshSphereShape() {
 refreshHelixShape();
 refreshSphereShape();
 for (let i = 0; i < total; i++) {
-  let x = i % 60;
-  let y = Math.floor(i / 60);
+  let x = i % 100;
+  let y = Math.floor(i / 100);
+  const total = dataLoader.filteredList.length;
+  const totalF = dataLoader.bookList.length;
 
   const object = new THREE.Object3D();
-  object.position.set(x * 6 - 140, -y * 8 + 80, 0);
+  object.position.set(x * 6 - (280 * total) / totalF, -y * 8 + 80, 0);
   object.rotation.setFromVector3(new THREE.Vector3(0, 0, 0));
 
   vector.copy(object.position).multiplyScalar(2);
@@ -86,19 +89,18 @@ let books: THREE.Mesh[] = [];
 
 function loadBooks() {
   books.length = 0;
+  const total = dataLoader.filteredList.length;
+  const totalF = dataLoader.bookList.length;
   books = dataLoader.filteredList.map((item, idx) => {
-    let x = idx % 60;
-    let y = Math.floor(idx / 60);
+    let x = idx % 100;
+    let y = Math.floor(idx / 100);
 
     const book = new Book3D(item, dataLoader.authorStore);
     const bookItem = book.bookItem as THREE.Mesh;
-    bookItem.position.set(x * 6 - 120, -y * 8 + 70, 0);
+    bookItem.position.set(x * 6 - (280 * total) / totalF, -y * 8 + 70, 0);
     return bookItem;
   });
   books.forEach((book) => scene.add(book));
-  console.log(
-    dataLoader.filteredList.filter((item) => item.author === 'Shravan')
-  );
 }
 loadBooks();
 
@@ -196,20 +198,29 @@ document
     const value = (
       document.getElementById('input') as HTMLInputElement
     ).value.toLowerCase();
-    const filtered = dataLoader.bookList.filter(
-      (item) =>
-        item.title.toLowerCase().includes(value) ||
-        item.publisher.toLowerCase().includes(value) ||
-        item.author.toLowerCase().includes(value)
+
+    const searchedBooks = dataLoader.bookList.filter(
+      (item) => item.isbn === value
     );
-    if (filtered.length > 0) {
-      dataLoader.filteredList = filtered;
-      refreshHelixShape();
-      refreshSphereShape();
-      clearBooks();
-      loadBooks();
+
+    if (searchedBooks && searchedBooks.length > 0) {
+      const resultPage = new ResultPage(searchedBooks[0]);
+    } else {
+      const filtered = dataLoader.bookList.filter(
+        (item) =>
+          item.title.toLowerCase().includes(value) ||
+          item.publisher.toLowerCase().includes(value) ||
+          item.author.toLowerCase().includes(value)
+      );
+      if (filtered.length > 0) {
+        dataLoader.filteredList = filtered;
+        refreshHelixShape();
+        refreshSphereShape();
+        clearBooks();
+        loadBooks();
+      }
+      (document.getElementById('input') as HTMLInputElement).value = '';
     }
-    (document.getElementById('input') as HTMLInputElement).value = '';
   });
 document.getElementById('reset')?.addEventListener('click', () => {
   overallReset();
