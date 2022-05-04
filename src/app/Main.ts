@@ -3,7 +3,7 @@ import { EnvironmentManager } from './EnvironmentManager';
 import { DataLoader } from './DataProvider/DataLoader';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls';
 import { Book3D } from './Model/Book3D';
-import { DirectionalLight, Mesh, Object3D } from 'three';
+import { Camera, DirectionalLight, Mesh, Object3D } from 'three';
 import { ResultPage } from './ResultPage';
 import { TWEEN } from 'three/examples/jsm/libs/tween.module.min';
 import { Book } from './Model/Book';
@@ -15,7 +15,7 @@ let renderer = envManager.renderer;
 let camera = envManager.camera;
 document.body.appendChild(renderer.domElement);
 const controls = new OrbitControls(camera, renderer.domElement);
-// controls.maxDistance = 500;
+controls.maxDistance = 800;
 //Program;
 
 const light = new DirectionalLight(0xffffff);
@@ -143,6 +143,7 @@ function displayBook(event: THREE.Event) {
     const bookdata = dataLoader.bookStore.get(item.object.name);
     if (bookdata) {
       const resultPage = new ResultPage(bookdata);
+      // const postion=camera.position.clone()
     }
   }
 }
@@ -175,20 +176,7 @@ function transform(targets: Object3D[], duration: number) {
       )
       .easing(TWEEN.Easing.Exponential.InOut)
       .start();
-
-    // new TWEEN.Tween(object.rotation)
-    //   .to(
-    //     { x: target.rotation.x, y: target.rotation.y, z: target.rotation.z },
-    //     Math.random() * duration + duration
-    //   )
-    //   .easing(TWEEN.Easing.Exponential.InOut)
-    //   .start();
   }
-
-  // new TWEEN.Tween(scene)
-  //   .to({}, duration * 2)
-  //   .onUpdate(envManager.render)
-  //   .start();
 }
 
 document
@@ -200,7 +188,7 @@ document
     ).value.toLowerCase();
 
     const searchedBooks = dataLoader.bookList.filter(
-      (item) => item.isbn === value
+      (item) => item.isbn.toLowerCase() === value
     );
 
     if (searchedBooks && searchedBooks.length > 0) {
@@ -219,8 +207,8 @@ document
         clearBooks();
         loadBooks();
       }
-      (document.getElementById('input') as HTMLInputElement).value = '';
     }
+    (document.getElementById('input') as HTMLInputElement).value = '';
   });
 document.getElementById('reset')?.addEventListener('click', () => {
   overallReset();
@@ -290,6 +278,7 @@ function overallReset() {
   clearBooks();
   loadBooks();
 }
+
 window.addEventListener('resize', () => envManager.onWindowResize(), false);
 function animate() {
   requestAnimationFrame(animate);
