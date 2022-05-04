@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="shortcut icon" href="favicon.ico" />
+    <title>Book Library Display</title>
+    <style>
+      @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@500;700;800&display=swap');
+      * {
+        font-family: 'Montserrat', sans-serif;
+      }
+      body {
+        overflow: hidden;
+        margin: 0px;
+        display: flex;
+        flex-direction: column;
+        height: 100vh;
+        width: 100vw;
+      }
+      .menubar {
+        display: flex;
+        justify-content: space-evenly;
+        align-items: center;
+        height: 50px;
+        background-image: linear-gradient(hsl(209, 100%, 17%) 15%, black);
+        box-shadow: inset 0px -1px 0px #fff1;
+      }
+      .menubar form {
+        display: flex;
+        gap: 10px;
+      }
+      .menubar input {
+        font-size: 14px;
+        padding: 5px 10px;
+        width: 240px;
+        background: hsl(209, 100%, 7%);
+        color: gray;
+        outline: none;
+        border: none;
+        border-radius: 10px;
+      }
+      .menubar input:focus {
+        outline: none;
+        color: white;
+        background: black;
+      }
+      button {
+        cursor: pointer;
+        border-radius: 10px;
+        font-size: 14px;
+        height: fit-content;
+        padding: 5px 10px;
+        border: none;
+        color: wheat;
+        background: hsl(180, 100%, 17%);
+        box-shadow: -1px -1px 0px 0px hsla(0, 0%, 100%, 0.5),
+          inset -1px -1px 3px 0px hsla(0, 0%, 100%, 0.5),
+          1px 1px 8px 0px hsla(0, 0%, 0%, 0.2),
+          inset 1px 1px 5px 0px hsla(0, 0%, 0%, 0.2);
+      }
+      .addbtn {
+        background: linear-gradient(hsl(209, 100%, 17%), hsl(209, 100%, 7%));
+      }
+      .threejsCanvas {
+        height: calc(100vh - 50px) !important;
+        width: 100vw !important;
+        z-index: 0;
+      }
+      .displayer {
+        position: absolute;
+        left: 0;
+        top: 30%;
+        height: 400px;
+        width: 300px;
+        color: white;
+        background-image: linear-gradient(
+          135deg,
+          hsl(209, 100%, 17%) 15%,
+          black
+        );
+        box-shadow: -1px -1px 5px 0px hsla(0, 0%, 100%, 0.5),
+          inset -1px -1px 5px 0px hsla(0, 0%, 100%, 0.5),
+          1px 1px 8px 0px hsla(0, 0%, 0%, 0.2),
+          inset 1px 1px 10px 0px hsla(0, 0%, 0%, 0.2);
+        letter-spacing: 1px;
+        padding: 10px 20px;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-around;
+        align-items: center;
+        gap: 20px;
+        animation: displayer 0.6s linear;
+        text-align: center;
+      }
+      @keyframes displayer {
+        from {
+          left: -300px;
+        }
+        to {
+          left: 0px;
+        }
+      }
+      .displayer img {
+        height: 60%;
+      }
+      .displayer .title {
+        font-size: 16px;
+        font-weight: 800;
+        color: white;
+      }
+      .displayer .author {
+        font-size: 14px;
+        font-weight: 700;
+        color: white;
+      }
+      .displayer .pub {
+        font-size: 14px;
+        font-weight: 500;
+        color: goldenrod;
+      }
+      .displayer .isbn {
+        font-size: 12px;
+        font-weight: 500;
+        color: goldenrod;
+      }
+      .toolbar {
+        background: transparent;
+        position: absolute;
+        bottom: 20px;
+        z-index: 3;
+        width: 100%;
+        display: flex;
+        justify-content: center;
+        gap: 20px;
+      }
+      .toolbar button {
+        padding: 10px 20px;
+      }
+      .formnewbook {
+        width: 440px;
+        font-size: 14px;
+        padding: 20px 30px;
+        display: flex;
+        flex-direction: column;
+        gap: 20px;
+        background-image: linear-gradient(
+          135deg,
+          hsl(209, 100%, 17%) 15%,
+          black
+        );
+        box-shadow: -1px -1px 5px 0px hsla(0, 0%, 100%, 0.5),
+          inset -1px -1px 5px 0px hsla(0, 0%, 100%, 0.5),
+          1px 1px 8px 0px hsla(0, 0%, 0%, 0.2),
+          inset 1px 1px 10px 0px hsla(0, 0%, 0%, 0.2);
+        letter-spacing: 1px;
+        color: white;
+        border-radius: 10px;
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+      }
+      .formnewbook .input {
+        width: 100%;
+        display: flex;
+        justify-content: space-between;
+      }
+      .formnewbook .input input {
+        width: 200px;
+        outline: none;
+        border: none;
+      }
+      .formnewbook .input input:focus {
+        outline: none;
+      }
+      .formnewbook .actions button {
+        cursor: pointer;
+        border-radius: 10px;
+        font-size: 14px;
+        height: fit-content;
+        padding: 5px 10px;
+        border: none;
+        color: wheat;
+        background: hsl(209, 100%, 17%);
+        box-shadow: -1px -1px 0px 0px hsla(0, 0%, 100%, 0.5),
+          inset -1px -1px 3px 0px hsla(0, 0%, 100%, 0.5),
+          1px 1px 8px 0px hsla(0, 0%, 0%, 0.2),
+          inset 1px 1px 5px 0px hsla(0, 0%, 0%, 0.2);
+      }
+      .formnewbook .actions .cancel {
+        background: hsla(209, 60%, 37%, 0.8);
+      }
+    </style>
+  </head>
+
+  <body>
+    <div class="menubar">
+      <form id="searchform">
+        <input id="input" placeholder="Search..." />
+        <button id="submit" type="submit">Submit</button>
+        <button id="reset">Reset</button>
+      </form>
+      <button id="addBook" class="addbtn">Add New Book</button>
+    </div>
+    <canvas id="threejsCanvas" class="threejsCanvas"></canvas>
+    <div class="toolbar">
+      <button id="sphere">sphere</button>
+      <button id="helix">helix</button>
+      <button id="table">table</button>
+    </div>
+    <script type="module" src="bundle.js"></script>
+  </body>
+</html>

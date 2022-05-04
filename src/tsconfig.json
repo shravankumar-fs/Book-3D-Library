@@ -1,0 +1,13 @@
+{
+  "compilerOptions": {
+    "moduleResolution": "node",
+    "target": "ES6",
+    "strict": true,
+    "resolveJsonModule": true,
+    "esModuleInterop": true,
+    "paths": {
+      "three/examples/jsm/libs/tween.module.min": ["./typings/tween.js"]
+    }
+  },
+  "include": ["**/*.ts"]
+}
