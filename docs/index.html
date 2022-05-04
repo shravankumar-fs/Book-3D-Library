@@ -59,8 +59,16 @@
           1px 1px 8px 0px hsla(0, 0%, 0%, 0.2),
           inset 1px 1px 5px 0px hsla(0, 0%, 0%, 0.2);
       }
+      button:hover {
+        background: hsl(180, 100%, 27%);
+        transform: scale(1.08);
+      }
       .addbtn {
         background: linear-gradient(hsl(209, 100%, 17%), hsl(209, 100%, 7%));
+      }
+      .addbtn:hover {
+        background: hsl(209, 100%, 17%);
+        transform: scale(1.08);
       }
       .threejsCanvas {
         height: calc(100vh - 50px) !important;
@@ -123,6 +131,16 @@
         font-size: 12px;
         font-weight: 500;
         color: goldenrod;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        gap: 20px;
+      }
+      .displayer .isbn button {
+        background: green;
+        height: 24px;
+        width: 24px;
+        padding: 0;
       }
       .toolbar {
         background: transparent;
@@ -136,6 +154,10 @@
       }
       .toolbar button {
         padding: 10px 20px;
+      }
+      .toolbar button:hover {
+        background: hsl(180, 100%, 27%);
+        transform: scale(1.08);
       }
       .formnewbook {
         width: 440px;

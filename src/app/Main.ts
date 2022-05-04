@@ -18,8 +18,18 @@ const controls = new OrbitControls(camera, renderer.domElement);
 controls.maxDistance = 800;
 //Program;
 
-const light = new DirectionalLight(0xffffff);
-scene.add(light);
+function addLight(position: THREE.Vector3) {
+  const light = new DirectionalLight(0xffffff * Math.random(), 2);
+  light.position.add(position);
+  scene.add(light);
+}
+const positionVal = 700;
+addLight(new THREE.Vector3(positionVal, 0, 0));
+addLight(new THREE.Vector3(-positionVal, 0, 0));
+addLight(new THREE.Vector3(0, positionVal, 0));
+addLight(new THREE.Vector3(0, -positionVal, 0));
+addLight(new THREE.Vector3(0, 0, positionVal));
+addLight(new THREE.Vector3(0, 0, -positionVal));
 
 //Actual Functionality
 const dataLoader = new DataLoader();
@@ -78,7 +88,7 @@ for (let i = 0; i < total; i++) {
 
   const object = new THREE.Object3D();
   object.position.set(x * 6 - (280 * total) / totalF, -y * 8 + 80, 0);
-  object.rotation.setFromVector3(new THREE.Vector3(0, 0, 0));
+  object.rotation.set(0, 0, 0);
 
   vector.copy(object.position).multiplyScalar(2);
   object.lookAt(vector);
