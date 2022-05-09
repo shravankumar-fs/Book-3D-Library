@@ -6,6 +6,7 @@ export class DataLoader {
   filteredList: Book[] = [];
   bookStore = new Map<string, Book>();
   authorStore = new Map<string, number>();
+
   constructor() {
     for (let i = 0; i < 3999; i++) {
       this.bookList.push(data[i] as Book);

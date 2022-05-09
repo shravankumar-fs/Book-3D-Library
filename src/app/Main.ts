@@ -8,6 +8,7 @@ import { ResultPage } from './ResultPage';
 import { TWEEN } from 'three/examples/jsm/libs/tween.module.min';
 import { Book } from './Model/Book';
 import { generateUUID } from 'three/src/math/MathUtils';
+import { NewBook } from './NewBook';
 
 let envManager = new EnvironmentManager();
 let scene = envManager.scene;
@@ -23,7 +24,7 @@ function addLight(position: THREE.Vector3) {
   light.position.add(position);
   scene.add(light);
 }
-const positionVal = 700;
+const positionVal = 800;
 addLight(new THREE.Vector3(positionVal, 0, 0));
 addLight(new THREE.Vector3(-positionVal, 0, 0));
 addLight(new THREE.Vector3(0, positionVal, 0));
@@ -31,7 +32,7 @@ addLight(new THREE.Vector3(0, -positionVal, 0));
 addLight(new THREE.Vector3(0, 0, positionVal));
 addLight(new THREE.Vector3(0, 0, -positionVal));
 
-//Actual Functionality
+//Main Functionality
 const dataLoader = new DataLoader();
 
 const total = dataLoader.filteredList.length;
@@ -40,6 +41,7 @@ const vector = new THREE.Vector3();
 const sphereShape: Object3D[] = [];
 const helixShape: Object3D[] = [];
 const tableShape: Object3D[] = [];
+const randomShape: Object3D[] = [];
 
 function refreshHelixShape() {
   const total = dataLoader.filteredList.length;
@@ -47,11 +49,11 @@ function refreshHelixShape() {
   helixShape.length = 0;
   for (let i = 0, l = total; i < l; i++) {
     const theta = i * 0.1 + Math.PI / 2;
-    const y = -i + (400 * total) / totalF;
+    const height = -i + (400 * total) / totalF;
 
     const object = new THREE.Object3D();
 
-    object.position.setFromCylindricalCoords(100, theta, y);
+    object.position.setFromCylindricalCoords(100, theta, height);
 
     vector.x = object.position.x * 2;
     vector.y = object.position.y;
@@ -77,23 +79,43 @@ function refreshSphereShape() {
     sphereShape.push(object);
   }
 }
+function refreshTableShape() {
+  for (let i = 0; i < total; i++) {
+    let x = i % 100;
+    let y = Math.floor(i / 100);
+    const total = dataLoader.filteredList.length;
+    const totalF = dataLoader.bookList.length;
 
+    const object = new THREE.Object3D();
+    object.position.set(x * 6 - (280 * total) / totalF, -y * 8 + 80, 0);
+    object.rotation.set(0, 0, 0);
+
+    vector.copy(object.position).multiplyScalar(2);
+    object.lookAt(vector);
+    tableShape.push(object);
+  }
+}
+function refreshRandomShapes() {
+  const total = dataLoader.filteredList.length;
+  const radius = 300;
+  for (let i = 0; i < total; i++) {
+    const x = radius * (Math.random() * 2 - 1);
+    const y = radius * (Math.random() * 2 - 1);
+    const z = radius * (Math.random() * 2 - 1);
+
+    const object = new THREE.Object3D();
+    object.position.set(x, y, z);
+    object.rotation.set(0, 0, 0);
+
+    vector.copy(object.position).multiplyScalar(2);
+    object.lookAt(vector);
+    randomShape.push(object);
+  }
+}
+refreshRandomShapes();
 refreshHelixShape();
 refreshSphereShape();
-for (let i = 0; i < total; i++) {
-  let x = i % 100;
-  let y = Math.floor(i / 100);
-  const total = dataLoader.filteredList.length;
-  const totalF = dataLoader.bookList.length;
-
-  const object = new THREE.Object3D();
-  object.position.set(x * 6 - (280 * total) / totalF, -y * 8 + 80, 0);
-  object.rotation.set(0, 0, 0);
-
-  vector.copy(object.position).multiplyScalar(2);
-  object.lookAt(vector);
-  tableShape.push(object);
-}
+refreshTableShape();
 
 let books: THREE.Mesh[] = [];
 
@@ -121,7 +143,13 @@ function clearBooks() {
     (item.material as THREE.MeshBasicMaterial).dispose();
   });
 }
-
+function contentReset() {
+  dataLoader.resetFilteredList();
+  refreshHelixShape();
+  refreshSphereShape();
+  clearBooks();
+  loadBooks();
+}
 const raycaster = new THREE.Raycaster();
 
 document.querySelector('canvas')?.addEventListener('click', displayBook);
@@ -152,26 +180,27 @@ function displayBook(event: THREE.Event) {
     const item = intersects[0];
     const bookdata = dataLoader.bookStore.get(item.object.name);
     if (bookdata) {
-      const resultPage = new ResultPage(bookdata);
-      // const postion=camera.position.clone()
+      new ResultPage(bookdata);
     }
   }
 }
-const buttonSphere = document.getElementById('sphere');
-const buttonHelix = document.getElementById('helix');
-const buttonTable = document.getElementById('table');
-if (buttonHelix && buttonSphere && buttonTable) {
-  buttonSphere.addEventListener('click', function () {
+function loadButtons() {
+  document.getElementById('sphere')?.addEventListener('click', function () {
     transform(sphereShape, 600);
   });
-
-  buttonHelix.addEventListener('click', function () {
+  document.getElementById('helix')?.addEventListener('click', function () {
     transform(helixShape, 600);
   });
-  buttonTable.addEventListener('click', function () {
+  document.getElementById('table')?.addEventListener('click', function () {
     transform(tableShape, 600);
   });
+  document.getElementById('random')?.addEventListener('click', function () {
+    transform(randomShape, 600);
+  });
 }
+
+loadButtons();
+
 function transform(targets: Object3D[], duration: number) {
   TWEEN.removeAll();
 
@@ -184,7 +213,7 @@ function transform(targets: Object3D[], duration: number) {
         { x: target.position.x, y: target.position.y, z: target.position.z },
         Math.random() * duration + duration
       )
-      .easing(TWEEN.Easing.Exponential.InOut)
+      .easing(TWEEN.Easing.Bounce.InOut)
       .start();
   }
 }
@@ -214,80 +243,21 @@ document
         dataLoader.filteredList = filtered;
         refreshHelixShape();
         refreshSphereShape();
+        refreshTableShape();
         clearBooks();
         loadBooks();
       }
     }
     (document.getElementById('input') as HTMLInputElement).value = '';
   });
+
 document.getElementById('reset')?.addEventListener('click', () => {
-  overallReset();
+  contentReset();
 });
+
 document.getElementById('addBook')?.addEventListener('click', () => {
-  document.getElementById('formnewbook')?.remove();
-  const el = document.createElement('form');
-  el.innerHTML = `
-  <div class="input">
-      <label for="formtitle">Enter title </label>
-      <input id="formtitle" placeholder="title.." required>
-  </div>
-  <div class="input">
-      <label for="formauthor">Author of book </label>
-      <input id="formauthor" placeholder="author.." required>
-  </div>
-  <div class="input">
-      <label for="formpub">Publication </label>
-      <input id="formpub" placeholder="publication.." required>
-  </div>
-  <div class="input">
-      <label for="formimage">Image url (optional) </label>
-      <input id="formimage" placeholder="image link..">
-  </div>
-
-  <div class="actions">
-      <button id="formnewsubmit" type="submit">Submit</button>
-      <button id="formnewcancel" class="cancel">Cancel</button>
-  </div>
-  
-  `;
-  el.id = 'formnewbook';
-  el.classList.add('formnewbook');
-
-  document.body.appendChild(el);
-  const titleEl = document.getElementById('formtitle') as HTMLInputElement;
-  const authorEl = document.getElementById('formauthor') as HTMLInputElement;
-  const pubEl = document.getElementById('formpub') as HTMLInputElement;
-  const imageEl = document.getElementById('formimage') as HTMLInputElement;
-
-  document.getElementById('formnewsubmit')?.addEventListener('click', () => {
-    if (!titleEl.value || !authorEl.value || !pubEl.value) {
-    } else {
-      const book = new Book();
-      book.title = titleEl.value;
-      book.author = authorEl.value;
-      book.publisher = pubEl.value;
-      book.image = imageEl.value
-        ? imageEl.value
-        : 'https://upload.wikimedia.org/wikipedia/commons/a/ac/No_image_available.svg';
-      book.isbn = generateUUID();
-      dataLoader.addBook(book);
-      overallReset();
-      el.remove();
-    }
-  });
-  document.getElementById('formnewcancel')?.addEventListener('click', () => {
-    el.remove();
-    overallReset();
-  });
+  new NewBook(dataLoader.addBook.bind(dataLoader), contentReset);
 });
-
-function overallReset() {
-  dataLoader.resetFilteredList();
-  refreshHelixShape();
-  refreshSphereShape();
-  clearBooks();
-  loadBooks();
-}
 
 window.addEventListener('resize', () => envManager.onWindowResize(), false);
 function animate() {

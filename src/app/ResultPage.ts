@@ -14,7 +14,7 @@ export class ResultPage {
         <div class="author">${this.book.author}</div>
         <div class="pub">${this.book.publisher}</div>
         <div class="isbn">${this.book.isbn}
-        <button id="isbncopy"><img src='resources/clipboard.png'/></button></div>
+        <button id="isbncopy" title="copy to clipboard"><img src='resources/clipboard.png'/></button></div>
     `;
     element.id = 'displayer';
     element.classList.add('displayer');
