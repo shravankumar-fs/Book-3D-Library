@@ -3,11 +3,8 @@ import { EnvironmentManager } from './EnvironmentManager';
 import { DataLoader } from './DataProvider/DataLoader';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls';
 import { Book3D } from './Model/Book3D';
-import { Camera, DirectionalLight, Mesh, Object3D } from 'three';
 import { ResultPage } from './ResultPage';
 import { TWEEN } from 'three/examples/jsm/libs/tween.module.min';
-import { Book } from './Model/Book';
-import { generateUUID } from 'three/src/math/MathUtils';
 import { NewBook } from './NewBook';
 
 let envManager = new EnvironmentManager();
@@ -20,7 +17,7 @@ controls.maxDistance = 800;
 //Program;
 
 function addLight(position: THREE.Vector3) {
-  const light = new DirectionalLight(0xffffff * Math.random(), 2);
+  const light = new THREE.DirectionalLight(0xffffff * 0.8, 2);
   light.position.add(position);
   scene.add(light);
 }
@@ -31,6 +28,9 @@ addLight(new THREE.Vector3(0, positionVal, 0));
 addLight(new THREE.Vector3(0, -positionVal, 0));
 addLight(new THREE.Vector3(0, 0, positionVal));
 addLight(new THREE.Vector3(0, 0, -positionVal));
+// const spotLight = new THREE.SpotLight(0xffffff, 2, 0, Math.PI / 16, 0.5);
+// scene.add(spotLight);
+// spotLight.position.set(0, 0, 800);
 
 //Main Functionality
 const dataLoader = new DataLoader();
@@ -38,10 +38,10 @@ const dataLoader = new DataLoader();
 const total = dataLoader.filteredList.length;
 
 const vector = new THREE.Vector3();
-const sphereShape: Object3D[] = [];
-const helixShape: Object3D[] = [];
-const tableShape: Object3D[] = [];
-const randomShape: Object3D[] = [];
+const sphereShape: THREE.Object3D[] = [];
+const helixShape: THREE.Object3D[] = [];
+const tableShape: THREE.Object3D[] = [];
+const randomShape: THREE.Object3D[] = [];
 
 function refreshHelixShape() {
   const total = dataLoader.filteredList.length;
@@ -89,9 +89,6 @@ function refreshTableShape() {
     const object = new THREE.Object3D();
     object.position.set(x * 6 - (280 * total) / totalF, -y * 8 + 80, 0);
     object.rotation.set(0, 0, 0);
-
-    vector.copy(object.position).multiplyScalar(2);
-    object.lookAt(vector);
     tableShape.push(object);
   }
 }
@@ -106,9 +103,6 @@ function refreshRandomShapes() {
     const object = new THREE.Object3D();
     object.position.set(x, y, z);
     object.rotation.set(0, 0, 0);
-
-    vector.copy(object.position).multiplyScalar(2);
-    object.lookAt(vector);
     randomShape.push(object);
   }
 }
@@ -201,7 +195,7 @@ function loadButtons() {
 
 loadButtons();
 
-function transform(targets: Object3D[], duration: number) {
+function transform(targets: THREE.Object3D[], duration: number) {
   TWEEN.removeAll();
 
   for (let i = 0; i < total; i++) {
@@ -213,9 +207,27 @@ function transform(targets: Object3D[], duration: number) {
         { x: target.position.x, y: target.position.y, z: target.position.z },
         Math.random() * duration + duration
       )
-      .easing(TWEEN.Easing.Bounce.InOut)
+      .easing(TWEEN.Easing.Exponential.InOut)
       .start();
+
+    new TWEEN.Tween(object.rotation)
+      .to(
+        {
+          x: target.rotation.x,
+          y: target.rotation.y,
+          z: target.rotation.z,
+        },
+        Math.random() * duration + duration
+      )
+      .easing(TWEEN.Easing.Exponential.InOut)
+      .start()
+      .onComplete(() => {
+        if (Math.random() > 0.9)
+          console.log(object.rotation.x, target.rotation.x);
+      });
   }
+
+  // books.forEach((book) => console.log(book.rotation));
 }
 
 document
@@ -258,9 +270,15 @@ document.getElementById('reset')?.addEventListener('click', () => {
 document.getElementById('addBook')?.addEventListener('click', () => {
   new NewBook(dataLoader.addBook.bind(dataLoader), contentReset);
 });
+let theta = 0;
 
+// scene.add(spotLight.target);
+// spotLight.target.position.x -= 200;
+// spotLight.target.position.y -= 100;
 window.addEventListener('resize', () => envManager.onWindowResize(), false);
 function animate() {
+  theta += 0.1;
+  // spotLight.target.position.x += Math.sin(theta) * 20;
   requestAnimationFrame(animate);
   TWEEN.update();
   envManager.render();
