@@ -4,11 +4,7 @@ import { Book } from './Book';
 export class Book3D {
   bookItem: THREE.Mesh;
 
-  constructor(
-    public book: Book,
-    public authStore: Map<string, number>,
-    mat: THREE.Material | THREE.Material[]
-  ) {
+  constructor(public book: Book, mat: THREE.Material | THREE.Material[]) {
     const material = new THREE.MeshLambertMaterial({
       color: Math.random() > 0.5 ? 0x0fdf0f : 0x0f0fdf,
       side: THREE.DoubleSide,

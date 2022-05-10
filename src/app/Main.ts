@@ -121,7 +121,7 @@ refreshTableShape();
 
 let books: THREE.Mesh[] = [];
 // const shaderMaterial = new BookShader().getMaterial();
-const bookLambertMaterial = new BookMeshLambert().getMaterial();
+const bookMaterialArray = new BookMeshLambert().getMaterial();
 function loadBooks() {
   books.length = 0;
   const total = dataLoader.filteredList.length;
@@ -129,7 +129,7 @@ function loadBooks() {
   books = dataLoader.filteredList.map((item, idx) => {
     let x = idx % 100;
     let y = Math.floor(idx / 100);
-    const book = new Book3D(item, dataLoader.authorStore, bookLambertMaterial);
+    const book = new Book3D(item, bookMaterialArray);
     // const book = new Book3D(item, dataLoader.authorStore, bookLambertMaterial);
     const bookItem = book.bookItem as THREE.Mesh;
     bookItem.position.set(x * 6 - (280 * total) / totalF, -y * 8 + 70, 0);
@@ -282,7 +282,7 @@ window.addEventListener('resize', () => envManager.onWindowResize(), false);
 const clock = new THREE.Clock();
 function animate() {
   if (Math.random() > 0.6) {
-    bookLambertMaterial.forEach(
+    bookMaterialArray.forEach(
       (mat) =>
         ((mat as RawShaderMaterial).uniforms.uTime.value =
           clock.getElapsedTime())

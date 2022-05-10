@@ -32,7 +32,7 @@ export class BookShader {
         float strength2=1.0-step(0.25, max(abs(vvUv.x-0.5 ),abs(vvUv.y-0.5)));
         float x=vvUv.x;
         float y=vvUv.y;
-        gl_FragColor=vec4(vec2(strength1*strength2),(x+y)/3.0,1.0);
+        gl_FragColor=vec4(vec2(strength1*strength2),(x+y)/5.0,1.0);
       }
       if(vColor==1.0){
         gl_FragColor=vec4(vec3(vvUv.x),1.0);
