@@ -52,7 +52,7 @@ const randomShape: THREE.Object3D[] = [];
 function refreshHelixShape() {
   const total = dataLoader.filteredList.length;
   const totalF = dataLoader.bookList.length;
-  helixShape.length = 0;
+  helixShape.splice(0, helixShape.length);
   for (let i = 0, l = total; i < l; i++) {
     const theta = i * 0.1 + Math.PI / 2;
     const height = -i + (400 * total) / totalF;
@@ -73,7 +73,7 @@ function refreshHelixShape() {
 function refreshSphereShape() {
   const total = dataLoader.filteredList.length;
   const totalF = dataLoader.bookList.length;
-  sphereShape.length = 0;
+  sphereShape.splice(0, sphereShape.length);
   for (let i = 0, l = total; i < l; i++) {
     const phi = Math.acos(-1 + (2 * i) / l);
     const theta = Math.sqrt(l * Math.PI) * phi;
@@ -88,12 +88,10 @@ function refreshSphereShape() {
 function refreshTableShape() {
   const total = dataLoader.filteredList.length;
   const totalF = dataLoader.bookList.length;
-  tableShape.length = 0;
+  tableShape.splice(0, tableShape.length);
   for (let i = 0; i < total; i++) {
     let x = i % 100;
     let y = Math.floor(i / 100);
-    const total = dataLoader.filteredList.length;
-    const totalF = dataLoader.bookList.length;
 
     const object = new THREE.Object3D();
     object.position.set(x * 6 - (280 * total) / totalF, -y * 8 + 80, 0);
@@ -103,7 +101,7 @@ function refreshTableShape() {
 }
 function refreshRandomShapes() {
   const total = dataLoader.filteredList.length;
-  randomShape.length = 0;
+  randomShape.splice(0, randomShape.length);
   const radius = 300;
   for (let i = 0; i < total; i++) {
     const x = radius * (Math.random() * 2 - 1);
@@ -269,7 +267,7 @@ document
         loadBooks();
       }
     }
-    (document.getElementById('input') as HTMLInputElement).value = '';
+    // (document.getElementById('input') as HTMLInputElement).value = '';
   });
 
 document.getElementById('reset')?.addEventListener('click', () => {
