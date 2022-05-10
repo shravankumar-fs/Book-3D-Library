@@ -24,11 +24,11 @@
         align-items: center;
         height: 50px;
         background-image: linear-gradient(hsl(209, 100%, 17%) 15%, black);
-        box-shadow: inset 0px -1px 0px #fff1;
+        box-shadow: inset 0px -1px 0px #fff4;
       }
-      .menubar form {
+      .menubar .searchform {
         display: flex;
-        gap: 10px;
+        gap: 5px;
       }
       .menubar input {
         font-size: 14px;
@@ -38,8 +38,9 @@
         color: gray;
         outline: none;
         border: none;
-        border-radius: 10px;
+        /* border-radius: 10px; */
       }
+
       .menubar input:focus {
         outline: none;
         color: white;
@@ -52,23 +53,40 @@
         height: fit-content;
         padding: 5px 10px;
         border: none;
-        color: wheat;
-        background: hsl(180, 100%, 17%);
-        box-shadow: -1px -1px 0px 0px hsla(0, 0%, 100%, 0.5),
-          inset -1px -1px 3px 0px hsla(0, 0%, 100%, 0.5),
-          1px 1px 8px 0px hsla(0, 0%, 0%, 0.2),
+        color: white;
+        background: linear-gradient(
+          135deg,
+          hsl(180, 100%, 17%) 55%,
+          hsl(180, 100%, 37%)
+        );
+        box-shadow: -1px -1px 4px 0px hsla(0, 0%, 100%, 0.5),
+          inset -2px -2px 4px 0px hsla(0, 0%, 100%, 0.5),
+          2px 2px 8px 0px hsla(0, 0%, 0%, 0.2),
           inset 1px 1px 5px 0px hsla(0, 0%, 0%, 0.2);
+      }
+      .menubar #submit {
+        background-color: hsl(180, 100%, 27%);
+      }
+      .menubar #submit img {
+        height: 15px;
+        width: 15px;
+        padding: 0;
       }
       button:hover {
         background: hsl(180, 100%, 27%);
-        transform: scale(1.08);
+        transform: scale(0.98);
       }
       .addbtn {
-        background: linear-gradient(hsl(209, 100%, 17%), hsl(209, 100%, 7%));
+        background: linear-gradient(
+          135deg,
+          hsl(209, 100%, 7%) 55%,
+          hsl(209, 100%, 27%)
+        );
       }
       .addbtn:hover {
         background: hsl(209, 100%, 17%);
-        transform: scale(1.08);
+
+        transform: scale(0.98);
       }
       .threejsCanvas {
         height: calc(100vh - 50px) !important;
@@ -230,7 +248,7 @@
       }
       .toolbar button:hover {
         background: hsl(180, 100%, 27%);
-        transform: scale(1.08);
+        transform: scale(0.98);
       }
       .formnewbook {
         width: 440px;
@@ -246,7 +264,7 @@
         );
         box-shadow: -1px -1px 5px 0px hsla(0, 0%, 100%, 0.5),
           inset -1px -1px 5px 0px hsla(0, 0%, 100%, 0.5),
-          1px 1px 8px 0px hsla(0, 0%, 0%, 0.2),
+          2px 2px 8px 0px hsla(0, 0%, 0%, 0.2),
           inset 1px 1px 10px 0px hsla(0, 0%, 0%, 0.2);
         letter-spacing: 1px;
         color: white;
@@ -292,12 +310,14 @@
 
   <body>
     <div class="menubar">
-      <form id="searchform">
+      <form id="searchform" class="searchform">
         <input id="input" placeholder="Search..." />
-        <button id="submit" type="submit">Submit</button>
-        <button id="reset">Reset Data</button>
+        <button id="submit" type="submit">
+          <img src="resources/search.png" />
+        </button>
       </form>
       <button id="addBook" class="addbtn">Add New Book</button>
+      <button id="reset" class="addbtn">Reload Data</button>
     </div>
     <canvas id="threejsCanvas" class="threejsCanvas"></canvas>
     <div class="toolbar">

@@ -5,7 +5,6 @@ export class DataLoader {
   bookList: Book[] = [];
   filteredList: Book[] = [];
   bookStore = new Map<string, Book>();
-  authorStore = new Map<string, number>();
 
   constructor() {
     for (let i = 0; i < 3999; i++) {
@@ -14,8 +13,8 @@ export class DataLoader {
     this.resetFilteredList();
     this.bookList.forEach((item) => {
       this.bookStore.set(item.isbn, item);
-      if (!this.authorStore.get(item.author))
-        this.authorStore.set(item.author, 0xffffff * Math.random());
+      // if (!this.authorStore.get(item.author))
+      //   this.authorStore.set(item.author, 0xffffff * Math.random());
     });
   }
 
@@ -26,7 +25,6 @@ export class DataLoader {
   addBook(book: Book) {
     this.bookList.push(book);
     this.bookStore.set(book.isbn, book);
-
     this.resetFilteredList();
   }
 }

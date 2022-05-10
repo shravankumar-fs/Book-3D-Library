@@ -29,9 +29,6 @@ export class NewBook {
     `;
 
   constructor(addBook: Function, contentReset: Function) {
-    console.log(addBook);
-    console.log(contentReset);
-
     document.getElementById('formnewbook')?.remove();
     const el = document.createElement('form');
     el.innerHTML = this.HTMLDATA;
@@ -54,7 +51,7 @@ export class NewBook {
         book.image = imageEl.value
           ? imageEl.value
           : 'https://upload.wikimedia.org/wikipedia/commons/a/ac/No_image_available.svg';
-        book.isbn = generateUUID();
+        book.isbn = generateUUID().split('-')[4];
         addBook(book);
         contentReset();
         el.remove();

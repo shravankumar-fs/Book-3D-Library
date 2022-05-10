@@ -6,6 +6,9 @@ import { Book3D } from './Model/Book3D';
 import { ResultPage } from './ResultPage';
 import { TWEEN } from 'three/examples/jsm/libs/tween.module.min';
 import { NewBook } from './NewBook';
+import { BookShader } from './Model/BookShader';
+import { BookMeshLambert } from './Model/BookMeshLambert';
+import { RawShaderMaterial } from 'three';
 
 let envManager = new EnvironmentManager();
 let scene = envManager.scene;
@@ -17,7 +20,10 @@ controls.maxDistance = 800;
 //Program;
 
 function addLight(position: THREE.Vector3) {
-  const light = new THREE.DirectionalLight(0xffffff * 0.8, 2);
+  const light = new THREE.DirectionalLight(
+    0xffffff, // * (0.7 + Math.random() * 0.3),
+    2
+  );
   light.position.add(position);
   scene.add(light);
 }
@@ -46,7 +52,7 @@ const randomShape: THREE.Object3D[] = [];
 function refreshHelixShape() {
   const total = dataLoader.filteredList.length;
   const totalF = dataLoader.bookList.length;
-  helixShape.length = 0;
+  helixShape.splice(0, helixShape.length);
   for (let i = 0, l = total; i < l; i++) {
     const theta = i * 0.1 + Math.PI / 2;
     const height = -i + (400 * total) / totalF;
@@ -67,7 +73,7 @@ function refreshHelixShape() {
 function refreshSphereShape() {
   const total = dataLoader.filteredList.length;
   const totalF = dataLoader.bookList.length;
-  sphereShape.length = 0;
+  sphereShape.splice(0, sphereShape.length);
   for (let i = 0, l = total; i < l; i++) {
     const phi = Math.acos(-1 + (2 * i) / l);
     const theta = Math.sqrt(l * Math.PI) * phi;
@@ -80,11 +86,12 @@ function refreshSphereShape() {
   }
 }
 function refreshTableShape() {
+  const total = dataLoader.filteredList.length;
+  const totalF = dataLoader.bookList.length;
+  tableShape.splice(0, tableShape.length);
   for (let i = 0; i < total; i++) {
     let x = i % 100;
     let y = Math.floor(i / 100);
-    const total = dataLoader.filteredList.length;
-    const totalF = dataLoader.bookList.length;
 
     const object = new THREE.Object3D();
     object.position.set(x * 6 - (280 * total) / totalF, -y * 8 + 80, 0);
@@ -94,6 +101,7 @@ function refreshTableShape() {
 }
 function refreshRandomShapes() {
   const total = dataLoader.filteredList.length;
+  randomShape.splice(0, randomShape.length);
   const radius = 300;
   for (let i = 0; i < total; i++) {
     const x = radius * (Math.random() * 2 - 1);
@@ -112,7 +120,8 @@ refreshSphereShape();
 refreshTableShape();
 
 let books: THREE.Mesh[] = [];
-
+// const shaderMaterial = new BookShader().getMaterial();
+const bookMaterialArray = new BookMeshLambert().getMaterial();
 function loadBooks() {
   books.length = 0;
   const total = dataLoader.filteredList.length;
@@ -120,8 +129,8 @@ function loadBooks() {
   books = dataLoader.filteredList.map((item, idx) => {
     let x = idx % 100;
     let y = Math.floor(idx / 100);
-
-    const book = new Book3D(item, dataLoader.authorStore);
+    const book = new Book3D(item, bookMaterialArray);
+    // const book = new Book3D(item, dataLoader.authorStore, bookLambertMaterial);
     const bookItem = book.bookItem as THREE.Mesh;
     bookItem.position.set(x * 6 - (280 * total) / totalF, -y * 8 + 70, 0);
     return bookItem;
@@ -134,13 +143,15 @@ function clearBooks() {
   books.forEach((item) => {
     scene.remove(item);
     item.geometry.dispose();
-    (item.material as THREE.MeshBasicMaterial).dispose();
+    // (item.material as THREE.MeshBasicMaterial).dispose();
   });
 }
 function contentReset() {
   dataLoader.resetFilteredList();
   refreshHelixShape();
   refreshSphereShape();
+  refreshTableShape();
+  refreshRandomShapes();
   clearBooks();
   loadBooks();
 }
@@ -220,11 +231,7 @@ function transform(targets: THREE.Object3D[], duration: number) {
         Math.random() * duration + duration
       )
       .easing(TWEEN.Easing.Exponential.InOut)
-      .start()
-      .onComplete(() => {
-        if (Math.random() > 0.9)
-          console.log(object.rotation.x, target.rotation.x);
-      });
+      .start();
   }
 
   // books.forEach((book) => console.log(book.rotation));
@@ -260,7 +267,7 @@ document
         loadBooks();
       }
     }
-    (document.getElementById('input') as HTMLInputElement).value = '';
+    // (document.getElementById('input') as HTMLInputElement).value = '';
   });
 
 document.getElementById('reset')?.addEventListener('click', () => {
@@ -270,15 +277,18 @@ document.getElementById('reset')?.addEventListener('click', () => {
 document.getElementById('addBook')?.addEventListener('click', () => {
   new NewBook(dataLoader.addBook.bind(dataLoader), contentReset);
 });
-let theta = 0;
 
-// scene.add(spotLight.target);
-// spotLight.target.position.x -= 200;
-// spotLight.target.position.y -= 100;
 window.addEventListener('resize', () => envManager.onWindowResize(), false);
+const clock = new THREE.Clock();
 function animate() {
-  theta += 0.1;
-  // spotLight.target.position.x += Math.sin(theta) * 20;
+  if (Math.random() > 0.6) {
+    bookMaterialArray.forEach(
+      (mat) =>
+        ((mat as RawShaderMaterial).uniforms.uTime.value =
+          clock.getElapsedTime())
+    );
+  }
+
   requestAnimationFrame(animate);
   TWEEN.update();
   envManager.render();
