@@ -88,6 +88,7 @@ function refreshSphereShape() {
 function refreshTableShape() {
   const total = dataLoader.filteredList.length;
   const totalF = dataLoader.bookList.length;
+  tableShape.length = 0;
   for (let i = 0; i < total; i++) {
     let x = i % 100;
     let y = Math.floor(i / 100);
@@ -102,6 +103,7 @@ function refreshTableShape() {
 }
 function refreshRandomShapes() {
   const total = dataLoader.filteredList.length;
+  randomShape.length = 0;
   const radius = 300;
   for (let i = 0; i < total; i++) {
     const x = radius * (Math.random() * 2 - 1);
