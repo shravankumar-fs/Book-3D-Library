@@ -332,6 +332,8 @@ document
     );
 
     if (searchedBooks && searchedBooks.length > 0) {
+      clearConnectingLines();
+      dataLoader.filteredList = searchedBooks;
       arrangementsReset();
       authorPublisherReset();
       const resultPage = new ResultPage(searchedBooks[0]);
@@ -345,7 +347,6 @@ document
       if (filtered.length > 0) {
         clearConnectingLines();
         dataLoader.filteredList = filtered;
-        // contentReset();
         arrangementsReset();
         authorPublisherReset();
       }
