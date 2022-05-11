@@ -8,7 +8,8 @@ import { TWEEN } from 'three/examples/jsm/libs/tween.module.min';
 import { NewBook } from './NewBook';
 import { BookShader } from './Model/BookShader';
 import { BookMeshLambert } from './Model/BookMeshLambert';
-import { RawShaderMaterial } from 'three';
+
+import { ResultsAuthorPub } from './ResultsAuthorPub';
 
 let envManager = new EnvironmentManager();
 let scene = envManager.scene;
@@ -16,18 +17,15 @@ let renderer = envManager.renderer;
 let camera = envManager.camera;
 document.body.appendChild(renderer.domElement);
 const controls = new OrbitControls(camera, renderer.domElement);
-controls.maxDistance = 800;
+controls.maxDistance = 1000;
 //Program;
-
+const lineVector = new Map<string, string[]>();
 function addLight(position: THREE.Vector3) {
-  const light = new THREE.DirectionalLight(
-    0xffffff, // * (0.7 + Math.random() * 0.3),
-    2
-  );
+  const light = new THREE.DirectionalLight(0xffffff, 2);
   light.position.add(position);
   scene.add(light);
 }
-const positionVal = 800;
+const positionVal = 1200;
 addLight(new THREE.Vector3(positionVal, 0, 0));
 addLight(new THREE.Vector3(-positionVal, 0, 0));
 addLight(new THREE.Vector3(0, positionVal, 0));
@@ -36,12 +34,10 @@ addLight(new THREE.Vector3(0, 0, positionVal));
 addLight(new THREE.Vector3(0, 0, -positionVal));
 // const spotLight = new THREE.SpotLight(0xffffff, 2, 0, Math.PI / 16, 0.5);
 // scene.add(spotLight);
-// spotLight.position.set(0, 0, 800);
+// spotLight.position.set(0, 0, 1200);
 
 //Main Functionality
 const dataLoader = new DataLoader();
-
-const total = dataLoader.filteredList.length;
 
 const vector = new THREE.Vector3();
 const sphereShape: THREE.Object3D[] = [];
@@ -79,7 +75,11 @@ function refreshSphereShape() {
     const theta = Math.sqrt(l * Math.PI) * phi;
 
     const object = new THREE.Object3D();
-    object.position.setFromSphericalCoords(190, phi, theta);
+    object.position.setFromSphericalCoords(
+      Math.max(50, (190 * total) / totalF),
+      phi,
+      theta
+    );
     vector.copy(object.position).multiplyScalar(2);
     object.lookAt(vector);
     sphereShape.push(object);
@@ -90,11 +90,15 @@ function refreshTableShape() {
   const totalF = dataLoader.bookList.length;
   tableShape.splice(0, tableShape.length);
   for (let i = 0; i < total; i++) {
-    let x = i % 100;
-    let y = Math.floor(i / 100);
+    let x = i % 40;
+    let y = Math.floor(i / 40);
 
     const object = new THREE.Object3D();
-    object.position.set(x * 6 - (280 * total) / totalF, -y * 8 + 80, 0);
+    object.position.set(
+      (x * 10 * total) / totalF - (280 * total) / totalF,
+      -y * 8 + 80,
+      0
+    );
     object.rotation.set(0, 0, 0);
     tableShape.push(object);
   }
@@ -120,19 +124,18 @@ refreshSphereShape();
 refreshTableShape();
 
 let books: THREE.Mesh[] = [];
-// const shaderMaterial = new BookShader().getMaterial();
 const bookMaterialArray = new BookMeshLambert().getMaterial();
 function loadBooks() {
   books.length = 0;
   const total = dataLoader.filteredList.length;
   const totalF = dataLoader.bookList.length;
   books = dataLoader.filteredList.map((item, idx) => {
-    let x = idx % 100;
-    let y = Math.floor(idx / 100);
+    let x = idx % 40;
+    let y = Math.floor(idx / 40);
     const book = new Book3D(item, bookMaterialArray);
     // const book = new Book3D(item, dataLoader.authorStore, bookLambertMaterial);
     const bookItem = book.bookItem as THREE.Mesh;
-    bookItem.position.set(x * 6 - (280 * total) / totalF, -y * 8 + 70, 0);
+    bookItem.position.set(x * 10 - (280 * total) / totalF, -y * 8 + 70, 0);
     return bookItem;
   });
   books.forEach((book) => scene.add(book));
@@ -143,11 +146,9 @@ function clearBooks() {
   books.forEach((item) => {
     scene.remove(item);
     item.geometry.dispose();
-    // (item.material as THREE.MeshBasicMaterial).dispose();
   });
 }
-function contentReset() {
-  dataLoader.resetFilteredList();
+function arrangementsReset() {
   refreshHelixShape();
   refreshSphereShape();
   refreshTableShape();
@@ -155,6 +156,20 @@ function contentReset() {
   clearBooks();
   loadBooks();
 }
+function contentReset() {
+  dataLoader.resetFilteredList();
+  arrangementsReset();
+}
+function authorPublisherReset() {
+  resetlineVectors();
+  clearConnectingLines();
+  clearAuthors();
+  loadAuthors();
+  clearPublishers();
+  loadPublishers();
+  loadAuthorPublisherConnections();
+}
+
 const raycaster = new THREE.Raycaster();
 
 document.querySelector('canvas')?.addEventListener('click', displayBook);
@@ -182,12 +197,74 @@ function displayBook(event: THREE.Event) {
   );
 
   if (intersects.length > 0) {
-    const item = intersects[0];
-    const bookdata = dataLoader.bookStore.get(item.object.name);
-    if (bookdata) {
-      new ResultPage(bookdata);
+    const item = intersects
+      .map((i) => i.object)
+      .find((i) => (i as THREE.Mesh).isMesh);
+
+    if (item) {
+      const bookdata = dataLoader.bookStore.get(item.name);
+      const authData = dataLoader.authorStore.get(item.name);
+      const pubdata = dataLoader.publisherStore.get(item.name);
+      if (bookdata) {
+        new ResultPage(bookdata);
+        createConnectingLines(item as THREE.Mesh);
+      } else if (authData) {
+        new ResultsAuthorPub(item.name, authData, 'Author');
+        createConnectingLines(item as THREE.Mesh);
+      } else if (pubdata) {
+        new ResultsAuthorPub(item.name, pubdata, 'Publisher');
+        createConnectingLines(item as THREE.Mesh);
+      }
     }
   }
+}
+const connectingLines: THREE.Line[] = [];
+
+function clearConnectingLines() {
+  connectingLines.forEach((line) => {
+    scene.remove(line);
+    line.geometry.dispose();
+  });
+  connectingLines.splice(0, connectingLines.length);
+}
+
+function createConnectingLines(source: THREE.Mesh) {
+  clearConnectingLines();
+  const sourcePos = source.position;
+  const mat = new THREE.LineBasicMaterial();
+  const targets = lineVector.get(source.id + '');
+  targets?.forEach((target) => {
+    const targetPos = scene.getObjectById(+target)?.position;
+    if (targetPos) {
+      const points: THREE.Vector3[] = [];
+      for (let i = 0; i < 5; i++) {
+        points.push(sourcePos.clone());
+      }
+      for (let i = 0; i < 5; i++) {
+        points.push(targetPos.clone());
+      }
+      const diff = 0.1;
+      points[1].x += diff;
+      points[2].x -= diff;
+      points[3].y += diff;
+      points[4].y -= diff;
+      points[6].x += diff;
+      points[7].x -= diff;
+      points[8].y += diff;
+      points[9].y -= diff;
+      // points.push(targetPos.clone());
+      // points.push(sourcePos.clone());
+      for (let i = 0; i < 5; i++) {
+        const geometry = new THREE.BufferGeometry().setFromPoints([
+          points[i],
+          points[i + 5],
+        ]);
+        const line = new THREE.Line(geometry, mat);
+        scene.add(line);
+        connectingLines.push(line);
+      }
+    }
+  });
 }
 function loadButtons() {
   document.getElementById('sphere')?.addEventListener('click', function () {
@@ -208,7 +285,10 @@ loadButtons();
 
 function transform(targets: THREE.Object3D[], duration: number) {
   TWEEN.removeAll();
-
+  clearConnectingLines();
+  // const tota
+  const total = dataLoader.filteredList.length;
+  const time = Math.random() * duration + duration;
   for (let i = 0; i < total; i++) {
     const object = books[i];
     const target = targets[i];
@@ -216,7 +296,7 @@ function transform(targets: THREE.Object3D[], duration: number) {
     new TWEEN.Tween(object.position)
       .to(
         { x: target.position.x, y: target.position.y, z: target.position.z },
-        Math.random() * duration + duration
+        time
       )
       .easing(TWEEN.Easing.Exponential.InOut)
       .start();
@@ -228,15 +308,17 @@ function transform(targets: THREE.Object3D[], duration: number) {
           y: target.rotation.y,
           z: target.rotation.z,
         },
-        Math.random() * duration + duration
+        time
       )
       .easing(TWEEN.Easing.Exponential.InOut)
       .start();
   }
 
-  // books.forEach((book) => console.log(book.rotation));
+  setTimeout(() => {
+    authorPublisherReset();
+  }, time + 300);
 }
-
+let showRelations = false;
 document
   .getElementById('searchform')
   ?.addEventListener('submit', (event: Event) => {
@@ -250,6 +332,8 @@ document
     );
 
     if (searchedBooks && searchedBooks.length > 0) {
+      arrangementsReset();
+      authorPublisherReset();
       const resultPage = new ResultPage(searchedBooks[0]);
     } else {
       const filtered = dataLoader.bookList.filter(
@@ -259,12 +343,11 @@ document
           item.author.toLowerCase().includes(value)
       );
       if (filtered.length > 0) {
+        clearConnectingLines();
         dataLoader.filteredList = filtered;
-        refreshHelixShape();
-        refreshSphereShape();
-        refreshTableShape();
-        clearBooks();
-        loadBooks();
+        // contentReset();
+        arrangementsReset();
+        authorPublisherReset();
       }
     }
     // (document.getElementById('input') as HTMLInputElement).value = '';
@@ -272,19 +355,201 @@ document
 
 document.getElementById('reset')?.addEventListener('click', () => {
   contentReset();
+  authorPublisherReset();
 });
 
 document.getElementById('addBook')?.addEventListener('click', () => {
   new NewBook(dataLoader.addBook.bind(dataLoader), contentReset);
 });
 
+const authorGroup: THREE.Mesh[] = [];
+const authorLineGroup: THREE.Line[] = [];
+const authMat = new BookShader().getMaterial();
+const pubMat = new BookShader().getMaterial();
+function resetlineVectors() {
+  lineVector.clear();
+}
+function loadAuthors() {
+  dataLoader.filteredList.forEach((book) => {
+    const book3DObject = scene.getObjectByName(book.isbn);
+    let author = scene.getObjectByName(book.author);
+    if (!author) {
+      const geo = new THREE.PlaneGeometry(6, 6);
+      authMat.uniforms.color.value = 3.0;
+      authMat.transparent = true;
+      author = new THREE.Mesh(geo, authMat);
+      author.name = book.author;
+      authorGroup.push(author as THREE.Mesh);
+      scene.add(author);
+      if (book3DObject) {
+        author.position.set(
+          book3DObject.position.x * 1.5,
+          book3DObject.position.y * 1.5,
+          book3DObject.position.z == 0 ? 300 : book3DObject.position.z * 1.5
+        );
+        author.lookAt(book3DObject.position);
+      }
+    }
+    if (book3DObject) {
+      if (lineVector.get(author.id + '')) {
+        lineVector.get(author.id + '')?.push(book3DObject.id + '');
+      } else {
+        lineVector.set(author.id + '', [book3DObject.id + '']);
+      }
+      if (lineVector.get(book3DObject.id + '')) {
+        lineVector.get(book3DObject.id + '')?.push(author.id + '');
+      } else {
+        lineVector.set(book3DObject.id + '', [author.id + '']);
+      }
+      if (showRelations)
+        createRelationalLines(
+          book3DObject as THREE.Mesh,
+          author as THREE.Mesh,
+          authorLineGroup,
+          0.06,
+          0x00ff00
+        );
+    }
+  });
+}
+function createRelationalLines(
+  target: THREE.Mesh,
+  source: THREE.Mesh,
+  lineGroup: THREE.Line[],
+  opacity: number,
+  color: number
+) {
+  const material = new THREE.LineDashedMaterial({
+    color: color,
+    transparent: true,
+    opacity: opacity,
+    dashSize: 1,
+    gapSize: 10,
+  });
+  const points: THREE.Vector3[] = [];
+  points.push(source.position.clone());
+  points.push(target.position.clone());
+  const geometry = new THREE.BufferGeometry().setFromPoints(points);
+  const line = new THREE.Line(geometry, material);
+  scene.add(line);
+  lineGroup.push(line);
+}
+function clearAuthors() {
+  authorGroup.forEach((author) => {
+    scene.remove(author);
+    author.geometry.dispose();
+  });
+  authorGroup.splice(0, authorGroup.length);
+
+  authorLineGroup.forEach((line) => {
+    scene.remove(line);
+    line.geometry.dispose();
+  });
+  authorLineGroup.splice(0, authorLineGroup.length);
+}
+loadAuthors();
+
+const publisherGroup: THREE.Mesh[] = [];
+const publisherLineGroup: THREE.Line[] = [];
+
+function loadPublishers() {
+  dataLoader.filteredList.forEach((book) => {
+    const book3DObject = scene.getObjectByName(book.isbn);
+    let publisher = scene.getObjectByName(book.publisher);
+    if (!publisher) {
+      const geo = new THREE.PlaneGeometry(6, 6);
+      pubMat.uniforms.color.value = 4.0;
+      pubMat.transparent = true;
+      publisher = new THREE.Mesh(geo, pubMat);
+      publisher.name = book.publisher;
+      publisherGroup.push(publisher as THREE.Mesh);
+      scene.add(publisher);
+      if (book3DObject) {
+        publisher.position.set(
+          book3DObject.position.x * 2,
+          book3DObject.position.y * 2,
+          book3DObject.position.z == 0 ? 500 : book3DObject.position.z * 2
+        );
+        publisher.lookAt(book3DObject.position);
+      }
+    }
+    if (book3DObject) {
+      if (lineVector.get(publisher.id + '')) {
+        lineVector.get(publisher.id + '')?.push(book3DObject.id + '');
+      } else {
+        lineVector.set(publisher.id + '', [book3DObject.id + '']);
+      }
+      if (lineVector.get(book3DObject.id + '')) {
+        lineVector.get(book3DObject.id + '')?.push(publisher.id + '');
+      } else {
+        lineVector.set(book3DObject.id + '', [publisher.id + '']);
+      }
+      if (showRelations)
+        createRelationalLines(
+          book3DObject as THREE.Mesh,
+          publisher as THREE.Mesh,
+          publisherLineGroup,
+          0.2,
+          0xffffff
+        );
+    }
+  });
+}
+
+function clearPublishers() {
+  publisherGroup.forEach((pub) => {
+    scene.remove(pub);
+    pub.geometry.dispose();
+  });
+  publisherGroup.splice(0, publisherGroup.length);
+
+  publisherLineGroup.forEach((line) => {
+    scene.remove(line);
+    line.geometry.dispose();
+  });
+  publisherLineGroup.splice(0, publisherLineGroup.length);
+}
+loadPublishers();
+
+function loadAuthorPublisherConnections() {
+  dataLoader.bookList.forEach((book) => {
+    const author = book.author;
+    const publisher = book.publisher;
+    const author3D = scene.getObjectByName(author);
+    const publisher3D = scene.getObjectByName(publisher);
+
+    if (author3D && publisher3D) {
+      lineVector.get(author3D.id + '')?.push(publisher3D.id + '');
+      lineVector.get(publisher3D.id + '')?.push(author3D.id + '');
+    }
+  });
+}
+
+loadAuthorPublisherConnections();
+const relationsBtn = document.getElementById('relations');
+
+if (relationsBtn) {
+  relationsBtn.addEventListener('click', () => {
+    if (relationsBtn.innerText.startsWith('show')) {
+      relationsBtn.innerText = 'hide relations';
+    } else {
+      relationsBtn.innerText = 'show relations';
+    }
+    showRelations = !showRelations;
+    clearAuthors();
+    clearPublishers();
+    loadAuthors();
+    loadPublishers();
+    loadAuthorPublisherConnections();
+  });
+}
 window.addEventListener('resize', () => envManager.onWindowResize(), false);
 const clock = new THREE.Clock();
 function animate() {
   if (Math.random() > 0.6) {
     bookMaterialArray.forEach(
       (mat) =>
-        ((mat as RawShaderMaterial).uniforms.uTime.value =
+        ((mat as THREE.RawShaderMaterial).uniforms.uTime.value =
           clock.getElapsedTime())
     );
   }
