@@ -292,17 +292,19 @@
       }
       .toolbar::before {
         position: absolute;
-        content: 'Scroll to zoom and click + pan screen to rotate & explore';
+        content: 'Click object to see its relation; Scroll to zoom & Click+pan screen to rotate';
         color: yellow;
-        letter-spacing: 1px;
         top: 0;
         left: 50%;
-        font-size: 10px;
         transform: translate(-50%, -50%);
+        text-align: center;
+        font-size: 10px;
+        letter-spacing: 1px;
+        width: max-content;
         padding: 5px 10px;
         border-radius: 10px;
-        background: black;
-        z-index: 4;
+        background: #000;
+        z-index: 5;
       }
       .formnewbook {
         width: 440px;
@@ -380,7 +382,7 @@
         <button id="helix">helix</button>
         <button id="table">table</button>
         <button id="random">randomise</button>
-        <button id="relations">show relations</button>
+        <button id="relations">show all relations</button>
       </div>
     </div>
     <script type="module" src="bundle.js"></script>
