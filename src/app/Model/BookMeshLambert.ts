@@ -1,7 +1,7 @@
 import * as THREE from 'three';
 import { BookShader } from './BookShader';
 
-export class BookMeshLambert {
+export class BookShaderMaterialGroup {
   private material: THREE.Material[];
   constructor() {
     const bookMatShader = new BookShader().getMaterial();

@@ -20,9 +20,13 @@ export class ResultsAuthorPub {
       works.appendChild(work);
     });
     works.classList.add('works');
+    const imgPath =
+      this.type === 'Author'
+        ? 'resources/author.png'
+        : 'resources/publisher.png';
     element.innerHTML = `
         <div class="name">${this.name}</div>
-        <div class="type">${this.type}</div>
+        <div class="type">${this.type} <img src=${imgPath} alt=""></div>
         <button id="closeResultPage" title="close"></button>
     `;
     element.appendChild(works);
