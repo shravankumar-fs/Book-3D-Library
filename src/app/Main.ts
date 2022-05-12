@@ -7,7 +7,7 @@ import { ResultPage } from './ResultPage';
 import { TWEEN } from 'three/examples/jsm/libs/tween.module.min';
 import { NewBook } from './NewBook';
 import { BookShader } from './Model/BookShader';
-import { BookMeshLambert } from './Model/BookMeshLambert';
+import { BookShaderMaterialGroup } from './Model/BookMeshLambert';
 
 import { ResultsAuthorPub } from './ResultsAuthorPub';
 
@@ -124,7 +124,7 @@ refreshSphereShape();
 refreshTableShape();
 
 let books: THREE.Mesh[] = [];
-const bookMaterialArray = new BookMeshLambert().getMaterial();
+const bookMaterialArray = new BookShaderMaterialGroup().getMaterial();
 function loadBooks() {
   books.length = 0;
   const total = dataLoader.filteredList.length;
@@ -336,7 +336,7 @@ document
       dataLoader.filteredList = searchedBooks;
       arrangementsReset();
       authorPublisherReset();
-      const resultPage = new ResultPage(searchedBooks[0]);
+      new ResultPage(searchedBooks[0]);
     } else {
       const filtered = dataLoader.bookList.filter(
         (item) =>
@@ -375,7 +375,7 @@ function loadAuthors() {
     const book3DObject = scene.getObjectByName(book.isbn);
     let author = scene.getObjectByName(book.author);
     if (!author) {
-      const geo = new THREE.PlaneGeometry(6, 6);
+      const geo = new THREE.PlaneGeometry(6, 6, 4, 4);
       authMat.uniforms.color.value = 3.0;
       authMat.transparent = true;
       author = new THREE.Mesh(geo, authMat);
@@ -458,7 +458,7 @@ function loadPublishers() {
     const book3DObject = scene.getObjectByName(book.isbn);
     let publisher = scene.getObjectByName(book.publisher);
     if (!publisher) {
-      const geo = new THREE.PlaneGeometry(6, 6);
+      const geo = new THREE.PlaneGeometry(6, 6, 4, 4);
       pubMat.uniforms.color.value = 4.0;
       pubMat.transparent = true;
       publisher = new THREE.Mesh(geo, pubMat);
@@ -553,6 +553,8 @@ function animate() {
         ((mat as THREE.RawShaderMaterial).uniforms.uTime.value =
           clock.getElapsedTime())
     );
+    pubMat.uniforms.uTime.value = clock.getElapsedTime();
+    authMat.uniforms.uTime.value = clock.getElapsedTime();
   }
 
   requestAnimationFrame(animate);
