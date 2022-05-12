@@ -133,7 +133,6 @@ function loadBooks() {
     let x = idx % 40;
     let y = Math.floor(idx / 40);
     const book = new Book3D(item, bookMaterialArray);
-    // const book = new Book3D(item, dataLoader.authorStore, bookLambertMaterial);
     const bookItem = book.bookItem as THREE.Mesh;
     bookItem.position.set(x * 10 - (280 * total) / totalF, -y * 8 + 70, 0);
     return bookItem;
@@ -535,9 +534,9 @@ const relationsBtn = document.getElementById('relations');
 if (relationsBtn) {
   relationsBtn.addEventListener('click', () => {
     if (relationsBtn.innerText.startsWith('show')) {
-      relationsBtn.innerText = 'hide relations';
+      relationsBtn.innerText = 'hide all relations';
     } else {
-      relationsBtn.innerText = 'show relations';
+      relationsBtn.innerText = 'show all relations';
     }
     showRelations = !showRelations;
     clearAuthors();
