@@ -7,7 +7,7 @@ import { ResultPage } from './ResultPage';
 import { TWEEN } from 'three/examples/jsm/libs/tween.module.min';
 import { NewBook } from './NewBook';
 import { BookShader } from './Model/BookShader';
-import { BookShaderMaterialGroup } from './Model/BookMeshLambert';
+import { BookShaderMaterialGroup } from './Model/BookShaderMaterialGroup';
 
 import { ResultsAuthorPub } from './ResultsAuthorPub';
 
@@ -243,7 +243,7 @@ function createConnectingLines(source: THREE.Mesh) {
       for (let i = 0; i < 5; i++) {
         points.push(targetPos.clone());
       }
-      const diff = 0.1;
+      const diff = 0.05;
       points[1].x += diff;
       points[2].x -= diff;
       points[3].y += diff;
@@ -252,8 +252,6 @@ function createConnectingLines(source: THREE.Mesh) {
       points[7].x -= diff;
       points[8].y += diff;
       points[9].y -= diff;
-      // points.push(targetPos.clone());
-      // points.push(sourcePos.clone());
       for (let i = 0; i < 5; i++) {
         const geometry = new THREE.BufferGeometry().setFromPoints([
           points[i],
