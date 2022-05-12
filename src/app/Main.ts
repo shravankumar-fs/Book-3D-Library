@@ -164,8 +164,8 @@ function authorPublisherReset() {
   resetlineVectors();
   clearConnectingLines();
   clearAuthors();
-  loadAuthors();
   clearPublishers();
+  loadAuthors();
   loadPublishers();
   loadAuthorPublisherConnections();
 }
@@ -283,8 +283,11 @@ loadButtons();
 
 function transform(targets: THREE.Object3D[], duration: number) {
   TWEEN.removeAll();
+  resetlineVectors();
   clearConnectingLines();
-  // const tota
+  clearAuthors();
+  clearPublishers();
+
   const total = dataLoader.filteredList.length;
   const time = Math.random() * duration + duration;
   for (let i = 0; i < total; i++) {
@@ -313,7 +316,9 @@ function transform(targets: THREE.Object3D[], duration: number) {
   }
 
   setTimeout(() => {
-    authorPublisherReset();
+    loadAuthors();
+    loadPublishers();
+    loadAuthorPublisherConnections();
   }, time + 300);
 }
 let showRelations = false;
