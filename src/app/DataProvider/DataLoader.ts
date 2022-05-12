@@ -7,6 +7,7 @@ export class DataLoader {
   bookStore = new Map<string, Book>();
   authorStore = new Map<string, Book[]>();
   publisherStore = new Map<string, Book[]>();
+
   constructor() {
     for (let i = 0; i < 1999; i++) {
       this.bookList.push(data[i] as Book);
@@ -14,17 +15,25 @@ export class DataLoader {
     this.resetFilteredList();
     this.bookList.forEach((item) => {
       this.bookStore.set(item.isbn, item);
-      if (!this.authorStore.get(item.author))
-        this.authorStore.set(item.author, [item]);
-      else {
-        this.authorStore.get(item.author)?.push(item);
-      }
-      if (!this.publisherStore.get(item.publisher))
-        this.publisherStore.set(item.publisher, [item]);
-      else {
-        this.publisherStore.get(item.publisher)?.push(item);
-      }
+      this.addToAuthorStore(item);
+      this.addToPublisherStore(item);
     });
+  }
+
+  addToAuthorStore(item: Book) {
+    if (!this.authorStore.get(item.author))
+      this.authorStore.set(item.author, [item]);
+    else {
+      this.authorStore.get(item.author)?.push(item);
+    }
+  }
+
+  addToPublisherStore(item: Book) {
+    if (!this.publisherStore.get(item.publisher))
+      this.publisherStore.set(item.publisher, [item]);
+    else {
+      this.publisherStore.get(item.publisher)?.push(item);
+    }
   }
 
   resetFilteredList() {
@@ -35,6 +44,8 @@ export class DataLoader {
   addBook(book: Book) {
     this.bookList.push(book);
     this.bookStore.set(book.isbn, book);
+    this.addToAuthorStore(book);
+    this.addToPublisherStore(book);
     this.resetFilteredList();
   }
 
