@@ -15,11 +15,12 @@ export class BookShader {
     void main(){
       vec4 modelPosition=modelMatrix * vec4(position,1.0);
       if(color>2.9){
-        modelPosition.z+=sin(modelPosition.y+modelPosition.x+uTime)/2.0;
+        modelPosition.z+=sin(modelPosition.y+modelPosition.x+uTime)/3.0;
       }
       else{
         modelPosition.z+=sin(modelPosition.x+uTime)/2.0;
       }
+      
 
       vec4 viewPosition= viewMatrix * modelPosition;
       gl_Position=projectionMatrix *  viewPosition;
@@ -55,7 +56,7 @@ export class BookShader {
         // gl_FragColor=vec4(0.0,vvUv.x,0.0,0.7);
         vec4 color1=texture2D(textureValue1,vvUv);
         
-      gl_FragColor=vec4(color1.x,color1.y,1.0-color1.z,1.0);
+      gl_FragColor=vec4(color1);
     
       }
       if(vColor==4.0){
