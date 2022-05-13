@@ -160,7 +160,7 @@ function contentReset() {
   arrangementsReset();
 }
 function authorPublisherReset() {
-  resetlineVectors();
+  clearAllRelationalLineVectors();
   clearConnectingLines();
   clearAuthors();
   clearPublishers();
@@ -282,7 +282,7 @@ loadButtons();
 
 function transform(targets: THREE.Object3D[], duration: number) {
   TWEEN.removeAll();
-  resetlineVectors();
+  clearAllRelationalLineVectors();
   clearConnectingLines();
   clearAuthors();
   clearPublishers();
@@ -369,9 +369,49 @@ const authorGroup: THREE.Mesh[] = [];
 const authorLineGroup: THREE.Line[] = [];
 const authMat = new BookShader().getMaterial();
 const pubMat = new BookShader().getMaterial();
-function resetlineVectors() {
+
+function clearAllRelationalLineVectors() {
   lineVector.clear();
 }
+function collectVerticesForAllRelationalLines(
+  sourceObject: THREE.Mesh,
+  targetObject: THREE.Mesh
+) {
+  if (lineVector.get(sourceObject.id + '')) {
+    lineVector.get(sourceObject.id + '')?.push(targetObject.id + '');
+  } else {
+    lineVector.set(sourceObject.id + '', [targetObject.id + '']);
+  }
+  if (lineVector.get(targetObject.id + '')) {
+    lineVector.get(targetObject.id + '')?.push(sourceObject.id + '');
+  } else {
+    lineVector.set(targetObject.id + '', [sourceObject.id + '']);
+  }
+}
+
+function createAllRelationalLines(
+  target: THREE.Mesh,
+  source: THREE.Mesh,
+  lineGroup: THREE.Line[],
+  opacity: number,
+  color: number
+) {
+  const material = new THREE.LineDashedMaterial({
+    color: color,
+    transparent: true,
+    opacity: opacity,
+    dashSize: 1,
+    gapSize: 10,
+  });
+  const points: THREE.Vector3[] = [];
+  points.push(source.position.clone());
+  points.push(target.position.clone());
+  const geometry = new THREE.BufferGeometry().setFromPoints(points);
+  const line = new THREE.Line(geometry, material);
+  scene.add(line);
+  lineGroup.push(line);
+}
+
 function loadAuthors() {
   dataLoader.filteredList.forEach((book) => {
     const book3DObject = scene.getObjectByName(book.isbn);
@@ -394,18 +434,12 @@ function loadAuthors() {
       }
     }
     if (book3DObject) {
-      if (lineVector.get(author.id + '')) {
-        lineVector.get(author.id + '')?.push(book3DObject.id + '');
-      } else {
-        lineVector.set(author.id + '', [book3DObject.id + '']);
-      }
-      if (lineVector.get(book3DObject.id + '')) {
-        lineVector.get(book3DObject.id + '')?.push(author.id + '');
-      } else {
-        lineVector.set(book3DObject.id + '', [author.id + '']);
-      }
+      collectVerticesForAllRelationalLines(
+        author as THREE.Mesh,
+        book3DObject as THREE.Mesh
+      );
       if (showRelations)
-        createRelationalLines(
+        createAllRelationalLines(
           book3DObject as THREE.Mesh,
           author as THREE.Mesh,
           authorLineGroup,
@@ -415,28 +449,7 @@ function loadAuthors() {
     }
   });
 }
-function createRelationalLines(
-  target: THREE.Mesh,
-  source: THREE.Mesh,
-  lineGroup: THREE.Line[],
-  opacity: number,
-  color: number
-) {
-  const material = new THREE.LineDashedMaterial({
-    color: color,
-    transparent: true,
-    opacity: opacity,
-    dashSize: 1,
-    gapSize: 10,
-  });
-  const points: THREE.Vector3[] = [];
-  points.push(source.position.clone());
-  points.push(target.position.clone());
-  const geometry = new THREE.BufferGeometry().setFromPoints(points);
-  const line = new THREE.Line(geometry, material);
-  scene.add(line);
-  lineGroup.push(line);
-}
+
 function clearAuthors() {
   authorGroup.forEach((author) => {
     scene.remove(author);
@@ -450,11 +463,25 @@ function clearAuthors() {
   });
   authorLineGroup.splice(0, authorLineGroup.length);
 }
+
 loadAuthors();
 
 const publisherGroup: THREE.Mesh[] = [];
 const publisherLineGroup: THREE.Line[] = [];
 
+function clearPublishers() {
+  publisherGroup.forEach((pub) => {
+    scene.remove(pub);
+    pub.geometry.dispose();
+  });
+  publisherGroup.splice(0, publisherGroup.length);
+
+  publisherLineGroup.forEach((line) => {
+    scene.remove(line);
+    line.geometry.dispose();
+  });
+  publisherLineGroup.splice(0, publisherLineGroup.length);
+}
 function loadPublishers() {
   dataLoader.filteredList.forEach((book) => {
     const book3DObject = scene.getObjectByName(book.isbn);
@@ -477,18 +504,13 @@ function loadPublishers() {
       }
     }
     if (book3DObject) {
-      if (lineVector.get(publisher.id + '')) {
-        lineVector.get(publisher.id + '')?.push(book3DObject.id + '');
-      } else {
-        lineVector.set(publisher.id + '', [book3DObject.id + '']);
-      }
-      if (lineVector.get(book3DObject.id + '')) {
-        lineVector.get(book3DObject.id + '')?.push(publisher.id + '');
-      } else {
-        lineVector.set(book3DObject.id + '', [publisher.id + '']);
-      }
+      collectVerticesForAllRelationalLines(
+        publisher as THREE.Mesh,
+        book3DObject as THREE.Mesh
+      );
+
       if (showRelations)
-        createRelationalLines(
+        createAllRelationalLines(
           book3DObject as THREE.Mesh,
           publisher as THREE.Mesh,
           publisherLineGroup,
@@ -499,19 +521,6 @@ function loadPublishers() {
   });
 }
 
-function clearPublishers() {
-  publisherGroup.forEach((pub) => {
-    scene.remove(pub);
-    pub.geometry.dispose();
-  });
-  publisherGroup.splice(0, publisherGroup.length);
-
-  publisherLineGroup.forEach((line) => {
-    scene.remove(line);
-    line.geometry.dispose();
-  });
-  publisherLineGroup.splice(0, publisherLineGroup.length);
-}
 loadPublishers();
 
 function loadAuthorPublisherConnections() {

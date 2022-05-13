@@ -38,7 +38,7 @@
         color: gray;
         outline: none;
         border: none;
-        /* border-radius: 10px; */
+        border-radius: 10px 0px 0px 10px;
       }
 
       .menubar input:focus {
@@ -56,13 +56,13 @@
         color: white;
         background: linear-gradient(
           135deg,
-          hsl(180, 100%, 17%) 55%,
-          hsl(180, 100%, 37%)
+          hsl(180, 100%, 17%) 65%,
+          hsl(180, 100%, 27%)
         );
-        box-shadow: -2px -2px 4px 0px hsla(0, 0%, 100%, 0.5),
-          inset -2px -2px 4px 0px hsla(0, 0%, 100%, 0.5),
-          2px 2px 8px 0px hsla(0, 0%, 0%, 0.2),
-          inset 1px 1px 5px 0px hsla(0, 0%, 0%, 0.2);
+        box-shadow: -2px -2px 6px 0px hsla(0, 0%, 100%, 0.15),
+          inset -1px -1px 2px 0px hsla(0, 0%, 100%, 0.15),
+          6px 6px 8px 0px hsla(0, 0%, 0%, 0.2),
+          inset 1px 1px 3px 0px hsla(0, 0%, 0%, 0.2);
       }
       .menubar #submit {
         background-color: hsl(180, 100%, 27%);
@@ -80,7 +80,7 @@
         background: linear-gradient(
           135deg,
           hsl(209, 100%, 7%) 55%,
-          hsl(209, 100%, 27%)
+          hsl(209, 100%, 17%)
         );
       }
       .addbtn:hover {
@@ -111,10 +111,10 @@
           hsla(209, 100%, 17%, 0.9),
           hsla(0, 0%, 0%, 0.9)
         );
-        box-shadow: -2px -2px 4px 0px hsla(0, 0%, 100%, 0.8),
-          inset -2px -2px 12px 0px hsla(0, 0%, 100%, 0.5),
-          2px 2px 4px 0px hsl(0, 0%, 0%),
-          inset 2px 2px 12px 0px hsla(0, 0%, 0%, 0.9);
+        box-shadow: -2px -2px 4px 0px hsla(0, 0%, 100%, 0.15),
+          inset -2px -2px 12px 0px hsla(0, 0%, 100%, 0.15),
+          2px 2px 4px 0px hsla(0, 0%, 0%, 0.2),
+          inset 2px 2px 12px 0px hsla(0, 0%, 0%, 0.2);
         letter-spacing: 1px;
         padding: 10px 20px;
         display: flex;
@@ -280,11 +280,21 @@
         gap: 20px;
         padding: 10px;
         padding-top: 20px;
-        box-shadow: 0px -4px 2px 0px #fff5;
+        box-shadow: -2px -2px 2px 0px #fff5;
         border-radius: 10px;
       }
       .toolbar button {
         padding: 10px 20px;
+        background: linear-gradient(
+          135deg,
+          hsl(180, 100%, 17%) 65%,
+          hsl(180, 100%, 27%)
+        );
+        z-index: 4;
+        box-shadow: -3px -3px 6px 0px hsla(0, 0%, 100%, 0.25),
+          inset -1px -1px 2px 0px hsla(0, 0%, 100%, 0.25),
+          6px 6px 8px 0px hsla(0, 0%, 0%, 0.2),
+          inset 1px 1px 3px 0px hsla(0, 0%, 0%, 0.2);
       }
       .toolbar button:hover {
         background: hsl(180, 100%, 27%);

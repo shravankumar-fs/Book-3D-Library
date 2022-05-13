@@ -27,7 +27,6 @@ export class EnvironmentManager {
 
   initScene() {
     this._scene = new THREE.Scene();
-    // this._scene.background = new THREE.Color(0x002f9f);
   }
 
   initCamera() {
