@@ -92,6 +92,7 @@ function authorPublisherReset() {
 }
 
 const raycaster = new THREE.Raycaster();
+const camFollow = false;
 document
   .querySelector('canvas')
   ?.addEventListener('click', displayRelationalData);
@@ -137,12 +138,44 @@ function displayRelationalData(event: THREE.Event) {
       if (bookdata) {
         new ResultPage(bookdata);
         createConnectingLines(item as THREE.Mesh);
+        if (camFollow) {
+          camera.position.set(
+            item.position.x,
+            item.position.y,
+            item.position.z + 50
+          );
+          camera.lookAt(item.position);
+        }
       } else if (authData) {
-        new ResultsAuthorPub(item.name, authData, 'Author');
+        new ResultsAuthorPub(
+          item.name.replace(AUTH_IDENTIFIER, ''),
+          authData,
+          'Author'
+        );
         createConnectingLines(item as THREE.Mesh);
+        if (camFollow) {
+          camera.position.set(
+            item.position.x,
+            item.position.y,
+            item.position.z - 50
+          );
+          camera.lookAt(item.position);
+        }
       } else if (pubdata) {
-        new ResultsAuthorPub(item.name, pubdata, 'Publisher');
+        new ResultsAuthorPub(
+          item.name.replace(PUB_IDENTIFIER, ''),
+          pubdata,
+          'Publisher'
+        );
         createConnectingLines(item as THREE.Mesh);
+        if (camFollow) {
+          camera.position.set(
+            item.position.x,
+            item.position.y,
+            item.position.z - 50
+          );
+          camera.lookAt(item.position);
+        }
       }
     }
   }
@@ -160,7 +193,7 @@ function clearConnectingLines() {
 function createConnectingLines(source: THREE.Mesh) {
   clearConnectingLines();
   const sourcePos = source.position;
-  const mat = new THREE.LineBasicMaterial();
+  const mat = new THREE.LineBasicMaterial({ color: 0x00ff00 });
   const targets = linkedObjects.get(source.id);
   targets?.forEach((target) => {
     const targetPos = scene.getObjectById(+target)?.position;
