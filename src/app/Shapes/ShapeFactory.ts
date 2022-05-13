@@ -64,7 +64,10 @@ export class ShapeFactory {
   refreshRandomShapes() {
     const total = this.dataLoader.filteredList.length;
     this.randomPositions.splice(0, this.randomPositions.length);
-    const radius = Math.max(50, 300 * total * this.dataLoader.bookList.length);
+    const radius = Math.max(
+      100,
+      (300 * total) / this.dataLoader.bookList.length
+    );
     for (let i = 0; i < total; i++) {
       const x = radius * (Math.random() * 2 - 1);
       const y = radius * (Math.random() * 2 - 1);
