@@ -8,8 +8,8 @@ import { TWEEN } from 'three/examples/jsm/libs/tween.module.min';
 import { NewBook } from './NewBook';
 import { BookShader } from './Model/BookShader';
 import { BookShaderMaterialGroup } from './Model/BookShaderMaterialGroup';
-
 import { ResultsAuthorPub } from './ResultsAuthorPub';
+import { ShapeFactory } from './Shapes/ShapeFactory';
 
 let envManager = new EnvironmentManager();
 let scene = envManager.scene;
@@ -18,8 +18,8 @@ let camera = envManager.camera;
 document.body.appendChild(renderer.domElement);
 const controls = new OrbitControls(camera, renderer.domElement);
 controls.maxDistance = 1000;
-//Program;
-const lineVector = new Map<string, string[]>();
+
+/**Lightings;*/
 function addLight(position: THREE.Vector3) {
   const light = new THREE.DirectionalLight(0xffffff, 2);
   light.position.add(position);
@@ -32,99 +32,19 @@ addLight(new THREE.Vector3(0, positionVal, 0));
 addLight(new THREE.Vector3(0, -positionVal, 0));
 addLight(new THREE.Vector3(0, 0, positionVal));
 addLight(new THREE.Vector3(0, 0, -positionVal));
-// const spotLight = new THREE.SpotLight(0xffffff, 2, 0, Math.PI / 16, 0.5);
-// scene.add(spotLight);
-// spotLight.position.set(0, 0, 1200);
 
-//Main Functionality
+/**Main Functionality*/
+const PUB_IDENTIFIER = 'mainskpub';
+const AUTH_IDENTIFIER = 'mainskauth';
+const linkedObjects = new Map<number, number[]>();
 const dataLoader = new DataLoader();
 
-const vector = new THREE.Vector3();
-const sphereShape: THREE.Object3D[] = [];
-const helixShape: THREE.Object3D[] = [];
-const tableShape: THREE.Object3D[] = [];
-const randomShape: THREE.Object3D[] = [];
-
-function refreshHelixShape() {
-  const total = dataLoader.filteredList.length;
-  const totalF = dataLoader.bookList.length;
-  helixShape.splice(0, helixShape.length);
-  for (let i = 0, l = total; i < l; i++) {
-    const theta = i * 0.1 + Math.PI / 2;
-    const height = -i + (400 * total) / totalF;
-
-    const object = new THREE.Object3D();
-
-    object.position.setFromCylindricalCoords(100, theta, height);
-
-    vector.x = object.position.x * 2;
-    vector.y = object.position.y;
-    vector.z = object.position.z * 2;
-
-    object.lookAt(vector);
-
-    helixShape.push(object);
-  }
-}
-function refreshSphereShape() {
-  const total = dataLoader.filteredList.length;
-  const totalF = dataLoader.bookList.length;
-  sphereShape.splice(0, sphereShape.length);
-  for (let i = 0, l = total; i < l; i++) {
-    const phi = Math.acos(-1 + (2 * i) / l);
-    const theta = Math.sqrt(l * Math.PI) * phi;
-
-    const object = new THREE.Object3D();
-    object.position.setFromSphericalCoords(
-      Math.max(50, (190 * total) / totalF),
-      phi,
-      theta
-    );
-    vector.copy(object.position).multiplyScalar(2);
-    object.lookAt(vector);
-    sphereShape.push(object);
-  }
-}
-function refreshTableShape() {
-  const total = dataLoader.filteredList.length;
-  const totalF = dataLoader.bookList.length;
-  tableShape.splice(0, tableShape.length);
-  for (let i = 0; i < total; i++) {
-    let x = i % 40;
-    let y = Math.floor(i / 40);
-
-    const object = new THREE.Object3D();
-    object.position.set(
-      (x * 10 * total) / totalF - (280 * total) / totalF,
-      -y * 8 + 80,
-      0
-    );
-    object.rotation.set(0, 0, 0);
-    tableShape.push(object);
-  }
-}
-function refreshRandomShapes() {
-  const total = dataLoader.filteredList.length;
-  randomShape.splice(0, randomShape.length);
-  const radius = 300;
-  for (let i = 0; i < total; i++) {
-    const x = radius * (Math.random() * 2 - 1);
-    const y = radius * (Math.random() * 2 - 1);
-    const z = radius * (Math.random() * 2 - 1);
-
-    const object = new THREE.Object3D();
-    object.position.set(x, y, z);
-    object.rotation.set(0, 0, 0);
-    randomShape.push(object);
-  }
-}
-refreshRandomShapes();
-refreshHelixShape();
-refreshSphereShape();
-refreshTableShape();
+const shapeFactory = new ShapeFactory(dataLoader);
+shapeFactory.refreshAllShapes();
 
 let books: THREE.Mesh[] = [];
 const bookMaterialArray = new BookShaderMaterialGroup().getMaterial();
+/**adds book geometries from the scene */
 function loadBooks() {
   books.length = 0;
   const total = dataLoader.filteredList.length;
@@ -141,24 +61,26 @@ function loadBooks() {
 }
 loadBooks();
 
+/**clears book geometries from the scene */
 function clearBooks() {
   books.forEach((item) => {
     scene.remove(item);
     item.geometry.dispose();
   });
 }
+
+/** clears all book related positions,arrangements and loads again*/
 function arrangementsReset() {
-  refreshHelixShape();
-  refreshSphereShape();
-  refreshTableShape();
-  refreshRandomShapes();
+  shapeFactory.refreshAllShapes();
   clearBooks();
   loadBooks();
 }
+/** clears all book related filters, positions,arrangements and loads again*/
 function contentReset() {
   dataLoader.resetFilteredList();
   arrangementsReset();
 }
+/** clears all author publisher relations,connections and loads again */
 function authorPublisherReset() {
   clearAllRelationalLineVectors();
   clearConnectingLines();
@@ -170,11 +92,13 @@ function authorPublisherReset() {
 }
 
 const raycaster = new THREE.Raycaster();
-
-document.querySelector('canvas')?.addEventListener('click', displayBook);
-function displayBook(event: THREE.Event) {
+document
+  .querySelector('canvas')
+  ?.addEventListener('click', displayRelationalData);
+function displayRelationalData(event: THREE.Event) {
   event.preventDefault();
   let canvasBounds = renderer.context.canvas.getBoundingClientRect();
+  /**Formula for line going to point 3D coordinates from 2D plane*/
   const mouse = {
     x:
       ((event.clientX - canvasBounds.left) /
@@ -196,14 +120,20 @@ function displayBook(event: THREE.Event) {
   );
 
   if (intersects.length > 0) {
+    /**Browse until you find a mesh object */
     const item = intersects
       .map((i) => i.object)
       .find((i) => (i as THREE.Mesh).isMesh);
 
     if (item) {
       const bookdata = dataLoader.bookStore.get(item.name);
-      const authData = dataLoader.authorStore.get(item.name);
-      const pubdata = dataLoader.publisherStore.get(item.name);
+      const authData = dataLoader.authorStore.get(
+        item.name.replace(AUTH_IDENTIFIER, '')
+      );
+      const pubdata = dataLoader.publisherStore.get(
+        item.name.replace(PUB_IDENTIFIER, '')
+      );
+
       if (bookdata) {
         new ResultPage(bookdata);
         createConnectingLines(item as THREE.Mesh);
@@ -231,7 +161,7 @@ function createConnectingLines(source: THREE.Mesh) {
   clearConnectingLines();
   const sourcePos = source.position;
   const mat = new THREE.LineBasicMaterial();
-  const targets = lineVector.get(source.id + '');
+  const targets = linkedObjects.get(source.id);
   targets?.forEach((target) => {
     const targetPos = scene.getObjectById(+target)?.position;
     if (targetPos) {
@@ -263,22 +193,23 @@ function createConnectingLines(source: THREE.Mesh) {
     }
   });
 }
-function loadButtons() {
+
+function loadTransformationButtons() {
   document.getElementById('sphere')?.addEventListener('click', function () {
-    transform(sphereShape, 600);
+    transform(shapeFactory.spherePositions, 600);
   });
   document.getElementById('helix')?.addEventListener('click', function () {
-    transform(helixShape, 600);
+    transform(shapeFactory.helixPositions, 600);
   });
   document.getElementById('table')?.addEventListener('click', function () {
-    transform(tableShape, 600);
+    transform(shapeFactory.tablePositions, 600);
   });
   document.getElementById('random')?.addEventListener('click', function () {
-    transform(randomShape, 600);
+    transform(shapeFactory.randomPositions, 600);
   });
 }
 
-loadButtons();
+loadTransformationButtons();
 
 function transform(targets: THREE.Object3D[], duration: number) {
   TWEEN.removeAll();
@@ -288,7 +219,6 @@ function transform(targets: THREE.Object3D[], duration: number) {
   clearPublishers();
 
   const total = dataLoader.filteredList.length;
-  const time = Math.random() * duration + duration;
   for (let i = 0; i < total; i++) {
     const object = books[i];
     const target = targets[i];
@@ -296,7 +226,7 @@ function transform(targets: THREE.Object3D[], duration: number) {
     new TWEEN.Tween(object.position)
       .to(
         { x: target.position.x, y: target.position.y, z: target.position.z },
-        time
+        duration
       )
       .easing(TWEEN.Easing.Exponential.InOut)
       .start();
@@ -308,7 +238,7 @@ function transform(targets: THREE.Object3D[], duration: number) {
           y: target.rotation.y,
           z: target.rotation.z,
         },
-        time
+        duration
       )
       .easing(TWEEN.Easing.Exponential.InOut)
       .start();
@@ -318,21 +248,30 @@ function transform(targets: THREE.Object3D[], duration: number) {
     loadAuthors();
     loadPublishers();
     loadAuthorPublisherConnections();
-  }, time + 300);
+  }, duration + 300);
 }
+
+const input = document.getElementById('input') as HTMLInputElement;
+input.value = '';
+
+document.getElementById('reset')?.addEventListener('click', () => {
+  contentReset();
+  authorPublisherReset();
+  input.value = '';
+});
 let showRelations = false;
+
+/**Input search function */
 document
   .getElementById('searchform')
   ?.addEventListener('submit', (event: Event) => {
     event.preventDefault();
-    const value = (
-      document.getElementById('input') as HTMLInputElement
-    ).value.toLowerCase();
+    const value = input.value.toLowerCase();
 
     const searchedBooks = dataLoader.bookList.filter(
       (item) => item.isbn.toLowerCase() === value
     );
-
+    /** If ISBN is searched by the user */
     if (searchedBooks && searchedBooks.length > 0) {
       clearConnectingLines();
       dataLoader.filteredList = searchedBooks;
@@ -340,6 +279,7 @@ document
       authorPublisherReset();
       new ResultPage(searchedBooks[0]);
     } else {
+      /**If user filtered basis on book title, author or publisher */
       const filtered = dataLoader.bookList.filter(
         (item) =>
           item.title.toLowerCase().includes(value) ||
@@ -353,13 +293,7 @@ document
         authorPublisherReset();
       }
     }
-    // (document.getElementById('input') as HTMLInputElement).value = '';
   });
-
-document.getElementById('reset')?.addEventListener('click', () => {
-  contentReset();
-  authorPublisherReset();
-});
 
 document.getElementById('addBook')?.addEventListener('click', () => {
   new NewBook(dataLoader.addBook.bind(dataLoader), contentReset);
@@ -369,26 +303,27 @@ const authorGroup: THREE.Mesh[] = [];
 const authorLineGroup: THREE.Line[] = [];
 const authMat = new BookShader().getMaterial();
 const pubMat = new BookShader().getMaterial();
-
+/**clear Relational lines */
 function clearAllRelationalLineVectors() {
-  lineVector.clear();
+  linkedObjects.clear();
 }
-function collectVerticesForAllRelationalLines(
+/**collect vertices needed for all relational lines */
+function collectVerticesForConnections(
   sourceObject: THREE.Mesh,
   targetObject: THREE.Mesh
 ) {
-  if (lineVector.get(sourceObject.id + '')) {
-    lineVector.get(sourceObject.id + '')?.push(targetObject.id + '');
+  if (linkedObjects.get(sourceObject.id)) {
+    linkedObjects.get(sourceObject.id)?.push(targetObject.id);
   } else {
-    lineVector.set(sourceObject.id + '', [targetObject.id + '']);
+    linkedObjects.set(sourceObject.id, [targetObject.id]);
   }
-  if (lineVector.get(targetObject.id + '')) {
-    lineVector.get(targetObject.id + '')?.push(sourceObject.id + '');
+  if (linkedObjects.get(targetObject.id)) {
+    linkedObjects.get(targetObject.id)?.push(sourceObject.id);
   } else {
-    lineVector.set(targetObject.id + '', [sourceObject.id + '']);
+    linkedObjects.set(targetObject.id, [sourceObject.id]);
   }
 }
-
+/** Create all relational lines */
 function createAllRelationalLines(
   target: THREE.Mesh,
   source: THREE.Mesh,
@@ -411,19 +346,21 @@ function createAllRelationalLines(
   scene.add(line);
   lineGroup.push(line);
 }
-
+/** Load Author 3D Shader objects */
 function loadAuthors() {
   dataLoader.filteredList.forEach((book) => {
+    /**For every book create an author object */
     const book3DObject = scene.getObjectByName(book.isbn);
-    let author = scene.getObjectByName(book.author);
+    let author = scene.getObjectByName(AUTH_IDENTIFIER + book.author);
     if (!author) {
       const geo = new THREE.PlaneGeometry(6, 6, 4, 4);
       authMat.uniforms.color.value = 3.0;
       authMat.transparent = true;
       author = new THREE.Mesh(geo, authMat);
-      author.name = book.author;
+      author.name = AUTH_IDENTIFIER + book.author;
       authorGroup.push(author as THREE.Mesh);
       scene.add(author);
+      /** Position author with respect to book */
       if (book3DObject) {
         author.position.set(
           book3DObject.position.x * 1.5,
@@ -433,8 +370,9 @@ function loadAuthors() {
         author.lookAt(book3DObject.position);
       }
     }
+    /** Position author with respect to book */
     if (book3DObject) {
-      collectVerticesForAllRelationalLines(
+      collectVerticesForConnections(
         author as THREE.Mesh,
         book3DObject as THREE.Mesh
       );
@@ -449,7 +387,7 @@ function loadAuthors() {
     }
   });
 }
-
+/**clear authors and author connection lines */
 function clearAuthors() {
   authorGroup.forEach((author) => {
     scene.remove(author);
@@ -468,7 +406,7 @@ loadAuthors();
 
 const publisherGroup: THREE.Mesh[] = [];
 const publisherLineGroup: THREE.Line[] = [];
-
+/**clear publishers and author publisher lines */
 function clearPublishers() {
   publisherGroup.forEach((pub) => {
     scene.remove(pub);
@@ -482,16 +420,18 @@ function clearPublishers() {
   });
   publisherLineGroup.splice(0, publisherLineGroup.length);
 }
+/**Load 3D publisher objects */
 function loadPublishers() {
+  /**For every book create an publisher object */
   dataLoader.filteredList.forEach((book) => {
     const book3DObject = scene.getObjectByName(book.isbn);
-    let publisher = scene.getObjectByName(book.publisher);
+    let publisher = scene.getObjectByName(PUB_IDENTIFIER + book.publisher);
     if (!publisher) {
       const geo = new THREE.PlaneGeometry(6, 6, 4, 4);
       pubMat.uniforms.color.value = 4.0;
       pubMat.transparent = true;
       publisher = new THREE.Mesh(geo, pubMat);
-      publisher.name = book.publisher;
+      publisher.name = PUB_IDENTIFIER + book.publisher;
       publisherGroup.push(publisher as THREE.Mesh);
       scene.add(publisher);
       if (book3DObject) {
@@ -504,11 +444,10 @@ function loadPublishers() {
       }
     }
     if (book3DObject) {
-      collectVerticesForAllRelationalLines(
+      collectVerticesForConnections(
         publisher as THREE.Mesh,
         book3DObject as THREE.Mesh
       );
-
       if (showRelations)
         createAllRelationalLines(
           book3DObject as THREE.Mesh,
@@ -522,30 +461,31 @@ function loadPublishers() {
 }
 
 loadPublishers();
-
+/**Load connections from authors to publishers */
 function loadAuthorPublisherConnections() {
   dataLoader.bookList.forEach((book) => {
     const author = book.author;
     const publisher = book.publisher;
-    const author3D = scene.getObjectByName(author);
-    const publisher3D = scene.getObjectByName(publisher);
+    const author3D = scene.getObjectByName(AUTH_IDENTIFIER + author);
+    const publisher3D = scene.getObjectByName(PUB_IDENTIFIER + publisher);
 
     if (author3D && publisher3D) {
-      lineVector.get(author3D.id + '')?.push(publisher3D.id + '');
-      lineVector.get(publisher3D.id + '')?.push(author3D.id + '');
+      linkedObjects.get(author3D.id)?.push(publisher3D.id);
+      linkedObjects.get(publisher3D.id)?.push(author3D.id);
     }
   });
 }
 
 loadAuthorPublisherConnections();
+
 const relationsBtn = document.getElementById('relations');
 
 if (relationsBtn) {
   relationsBtn.addEventListener('click', () => {
     if (relationsBtn.innerText.startsWith('show')) {
-      relationsBtn.innerText = 'hide all relations';
+      relationsBtn.innerText.replace('show', 'hide');
     } else {
-      relationsBtn.innerText = 'show all relations';
+      relationsBtn.innerText.replace('hide', 'show');
     }
     showRelations = !showRelations;
     clearAuthors();
@@ -556,7 +496,9 @@ if (relationsBtn) {
   });
 }
 window.addEventListener('resize', () => envManager.onWindowResize(), false);
+
 const clock = new THREE.Clock();
+
 function animate() {
   if (Math.random() > 0.6) {
     bookMaterialArray.forEach(
